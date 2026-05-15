@@ -1,5 +1,7 @@
 #include "common.h"
 
+#ifndef BOID_H
+#define BOID_H
 typedef struct
 {
 	double          x;
@@ -16,10 +18,14 @@ typedef struct
 
 
 	SDL_Texture* texture;
-} Entity;
+} Boid;
 
 
 
-void initPlayer(Entity* player, double posX, double posY, double topSpeed, double acceleration, char* texture);
-void updatePlayer(Entity* player, vec2 inputDirection);
-void drawPlayer(Entity* player);
+Boid boid_create(double topSpeed, double acceleration, char* texture);
+
+
+void drawBoid(Boid* boid);
+
+
+#endif

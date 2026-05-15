@@ -9,6 +9,8 @@
 #include "input.h"
 #include "main.h"
 #include "player.h"
+#include "boid.h"
+#include "flockbehavior.h"
 
 App    app;
 Entity player;
@@ -25,13 +27,37 @@ int main(int argc, char* argv[])
 	int topSpeed = 8;
 	double posX = 100.0;
 	double posY = 100.0;
+	double acceleration = 0.05;
 	vec2 speedNormalized = { 0, 0 };
+	int boidCount = 10;
+	Boid* boids = malloc(sizeof(Boid) * boidCount);
+
+	double avoidFactor = 0.05;
+	double matchingFactor = 0.05;
+	double centeringFactor = 0.001;	
+
+	int maxVisible = 10;
+	double visionRadius = 100.0;
+	double protectedRange = 20.0;
 
 
-	initPlayer(&player, posX, posY, topSpeed, "gfx/boid.png");
+	for (size_t i = 0; i < boidCount; i++)
+	{
+		boids[i] = boid_create(topSpeed, acceleration, "gfx/boid.png");
+	}
 
+	initPlayer(&player, posX, posY, topSpeed, acceleration, "gfx/boid.png");
+	Uint64 lastCounter = SDL_GetPerformanceCounter();
 	while (1)
 	{
+		Uint64 currentCounter = SDL_GetPerformanceCounter();
+
+		double deltaTime =
+			(double)(currentCounter - lastCounter) /
+			SDL_GetPerformanceFrequency();
+
+		lastCounter = currentCounter;
+
 		prepareScene();
 
 		doInput();
@@ -42,6 +68,18 @@ int main(int argc, char* argv[])
 		});
 
 		drawPlayer(&player);
+
+		for (size_t i = 0; i < boidCount; i++)
+		{
+			Flock(&boids[i], boids, boidCount, avoidFactor, matchingFactor, centeringFactor, maxVisible, visionRadius, protectedRange, deltaTime);
+
+			boids[i].x += boids[i].speed.x;
+			boids[i].y += boids[i].speed.y;
+
+			drawBoid(&boids[i]);	
+		}
+
+
 
 		presentScene();
 

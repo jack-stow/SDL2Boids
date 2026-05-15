@@ -1,7 +1,7 @@
 
 #include "player.h"
 
-void initPlayer(Entity* player, double posX, double posY, double topSpeed, char* texture)
+void initPlayer(Entity* player, double posX, double posY, double topSpeed, double acceleration, char* texture)
 {
     player->x = posX;
     player->y = posY;
@@ -12,6 +12,7 @@ void initPlayer(Entity* player, double posX, double posY, double topSpeed, char*
     player->angle = 0;
     player->desiredAngle = 0;
 	player->topSpeed = topSpeed;
+	player->acceleration = acceleration;
 	player->texture = loadTexture(texture);
     if (player->texture == NULL)
     {
@@ -28,7 +29,7 @@ void updatePlayer(Entity* player, vec2 inputDirection)
 
     desiredSpeed = vec_mul(vec_norm(desiredSpeed), player->topSpeed);
 
-    player->speed = vec_lerp(player->speed, desiredSpeed, 0.01);
+    player->speed = vec_lerp(player->speed, desiredSpeed, player->acceleration);
 
     if (vec_mag(player->speed) > 0.01)
     {
@@ -36,8 +37,9 @@ void updatePlayer(Entity* player, vec2 inputDirection)
     }
 
     player->angle = normalize_angle(
-        angle_lerp(player->angle, player->desiredAngle, 0.1)
+        angle_lerp(player->angle, player->desiredAngle, 0.25)
     );
+	//player->angle = player->desiredAngle;
 
     player->x = CLAMP(player->x + player->speed.x, 0, SCREEN_WIDTH - 48.0);
     player->y = CLAMP(player->y + player->speed.y, 0, SCREEN_HEIGHT - 48.0);

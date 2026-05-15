@@ -22,6 +22,8 @@
     <ClCompile Include="src\vector2.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\boid.c" />
+    <ClCompile Include="src\flockbehavior.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -51,6 +53,8 @@
     <ClInclude Include="src\vector2.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\boid.h" />
+    <ClInclude Include="src\flockbehavior.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

@@ -19,8 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\boid.c" />
     <ClCompile Include="src\common.c" />
     <ClCompile Include="src\draw.c" />
+    <ClCompile Include="src\flockbehavior.c" />
     <ClCompile Include="src\init.c" />
     <ClCompile Include="src\input.c" />
     <ClCompile Include="src\main.c" />
@@ -28,9 +30,11 @@
     <ClCompile Include="src\vector2.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\boid.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\defs.h" />
     <ClInclude Include="src\draw.h" />
+    <ClInclude Include="src\flockbehavior.h" />
     <ClInclude Include="src\init.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\main.h" />
