@@ -36,29 +36,31 @@ int main(int argc, char* argv[])
 	double posX = 100.0;
 	double posY = 100.0;
 
-	double topSpeed = TOP_SPEED;
-	double minSpeed = MIN_SPEED;
-	double acceleration = ACCELERATION;
 
+	SimulationParameters sim = {
+		.topSpeed = TOP_SPEED,
+		.minSpeed = MIN_SPEED,
+		.acceleration = ACCELERATION,
 
-	double avoidFactor = AVOID_FACTOR;
-	double matchingFactor = MATCHING_FACTOR;
-	double centeringFactor = CENTERING_FACTOR;
-	double borderingFactor = BORDERING_FACTOR;
+		.avoidFactor = AVOID_FACTOR,
+		.matchingFactor = MATCHING_FACTOR,
+		.centeringFactor = CENTERING_FACTOR,
+		.borderingFactor = BORDERING_FACTOR,
 
-	int maxVisible = MAX_VISIBLE;
-	double visionRadius = VISION_RADIUS;
-	double protectedRange = PROTECTED_RANGE;
+		.maxVisible = MAX_VISIBLE,
+		.visionRadius = VISION_RADIUS,
+		.protectedRange = PROTECTED_RANGE,
 
-	double poiFactor = POI_FACTOR;
+		.poiFactor = POI_FACTOR
+	};
 
 	int boidCount = BOID_COUNT;
-	Boid* boids = malloc(sizeof(Boid) * boidCount);
 
+	Boid* boids = malloc(sizeof(Boid) * boidCount);
 
 	for (size_t i = 0; i < boidCount; i++)
 	{
-		boids[i] = boid_create(topSpeed, minSpeed, acceleration, "gfx/boid.png");
+		boids[i] = boid_create(sim, "gfx/boid.png");
 	}
 
 	int poiCount = 5;
@@ -69,7 +71,7 @@ int main(int argc, char* argv[])
 		pointsOfInterest[i] = poi_create_random();
 	}
 
-	initPlayer(&player, posX, posY, topSpeed, acceleration, "gfx/boid.png");
+	initPlayer(&player, posX, posY, sim.topSpeed, sim.acceleration, "gfx/boid.png");
 	Uint64 lastCounter = SDL_GetPerformanceCounter();
 
 	double fpsTimer = 0.0;
@@ -105,7 +107,7 @@ int main(int argc, char* argv[])
 
 
 		flockStart = SDL_GetPerformanceCounter();
-		HandleBoids(boids, boidCount, avoidFactor, matchingFactor, centeringFactor, borderingFactor, maxVisible, visionRadius, protectedRange, pointsOfInterest, poiCount, poiFactor, deltaTime);
+		HandleBoids(boids, boidCount, sim, pointsOfInterest, poiCount, deltaTime);
 
 		for (size_t i = 0; i < poiCount; i++)
 		{

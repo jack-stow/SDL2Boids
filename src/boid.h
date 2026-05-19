@@ -44,9 +44,25 @@ typedef struct
 	SDL_Texture* texture;
 } Boid;
 
+typedef struct
+{
+	double topSpeed;
+	double minSpeed;
+	double acceleration;
 
+	double avoidFactor;
+	double matchingFactor;
+	double centeringFactor;
+	double borderingFactor;
 
-Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* texture);
+	int maxVisible;
+	double visionRadius;
+	double protectedRange;
+	double poiFactor;
+
+} SimulationParameters;
+
+Boid boid_create(SimulationParameters sim, char* texture);
 
 
 void drawBoid(Boid* boid);

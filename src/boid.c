@@ -2,7 +2,7 @@
 #include "boid.h"
 #include <time.h>
 
-Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* texture)
+Boid boid_create(SimulationParameters sim, char* texture)
 {
     Boid boid;
 
@@ -18,9 +18,9 @@ Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* te
     dir = vec_norm(dir);
 
     // Random speed magnitude
-    double speed = ((double)rand() / RAND_MAX) * topSpeed;
+    double speed = ((double)rand() / RAND_MAX) * sim.topSpeed;
 
-	speed = CLAMP(speed, minSpeed, topSpeed);
+	speed = CLAMP(speed, sim.minSpeed, sim.topSpeed);
 
     boid.speed = vec_mul(dir, speed);
     boid.desiredSpeed = boid.speed;
@@ -29,8 +29,8 @@ Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* te
 
     boid.desiredAngle = boid.angle;
 
-    boid.topSpeed = topSpeed;
-    boid.acceleration = acceleration;
+    boid.topSpeed = sim.topSpeed;
+    boid.acceleration = sim.acceleration;
 
     boid.texture = loadTexture(texture);
 
