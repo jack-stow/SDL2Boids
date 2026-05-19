@@ -58,7 +58,9 @@ typedef struct
 
 	int maxVisible;
 	double visionRadius;
+	double visionRadiusSq;
 	double protectedRange;
+	double protectedRangeSq;
 	double poiFactor;
 
 } SimulationParameters;

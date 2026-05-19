@@ -35,6 +35,11 @@ double vec_mag(vec2 v)
     return sqrt(v.x * v.x + v.y * v.y);
 }
 
+double vec_mag_sq(vec2 v)
+{
+    return v.x * v.x + v.y * v.y;
+}
+
 /// <summary>
 /// produces a unit vector in the same direction as the input vector. 
 /// If the input vector has zero magnitude, it returns a zero vector.
@@ -62,6 +67,15 @@ double vec_dot(vec2 v1, vec2 v2)
 double vec_dist(vec2 v1, vec2 v2)
 {
     return vec_mag(vec_sub(v1, v2));
+}
+
+double vec_dist_sq(vec2 v1, vec2 v2)
+{
+    vec2 diff = vec_sub(v1, v2);
+
+    return
+        diff.x * diff.x +
+        diff.y * diff.y;
 }
 
 double vec_angle(vec2 v1, vec2 v2)

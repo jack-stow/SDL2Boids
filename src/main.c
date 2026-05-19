@@ -49,7 +49,9 @@ int main(int argc, char* argv[])
 
 		.maxVisible = MAX_VISIBLE,
 		.visionRadius = VISION_RADIUS,
+		.visionRadiusSq = VISION_RADIUS * VISION_RADIUS,
 		.protectedRange = PROTECTED_RANGE,
+		.protectedRangeSq = PROTECTED_RANGE * PROTECTED_RANGE,
 
 		.poiFactor = POI_FACTOR
 	};
@@ -120,13 +122,13 @@ int main(int argc, char* argv[])
 			poi_draw(&pointsOfInterest[i], poiColor);
 		}
 
+		flockEnd = SDL_GetPerformanceCounter();
 		draw_circle((int)boids[0].x, (int)boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
 
 		draw_circle((int)boids[0].x, (int)boids[0].y, sim.protectedRange, (Color) { 255, 0, 255, 255 }, false);
 
 
 
-		flockEnd = SDL_GetPerformanceCounter();
 		double flockSeconds =
 			(double)(flockEnd - flockStart) / SDL_GetPerformanceFrequency();
 

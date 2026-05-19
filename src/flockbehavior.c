@@ -1,5 +1,7 @@
 #include "flockbehavior.h"
 
+#include <float.h>
+
 
 void HandleBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime) {
     
@@ -48,20 +50,19 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 
         vec2 otherPos = { other->x, other->y };
 
-        double distance = vec_dist(boidPos, otherPos);
-
-        if (distance <= 0.0 || distance >= sim.visionRadius)
+		double distanceSq = vec_dist_sq(boidPos, otherPos);
+        if (distanceSq <= 0.0 || distanceSq >= sim.visionRadiusSq)
         {
             continue;
-        }
+		}
 
         // Avoidance
-        if (distance < sim.protectedRange)
+        if (distanceSq < sim.protectedRangeSq)
         {
             vec2 away = vec_sub(boidPos, otherPos);
 
             // Stronger avoidance when very close
-            away = vec_mul(away, 1.0 / (distance * distance));
+            away = vec_mul(away, 1.0 / distanceSq);
 
             avoid = vec_add(avoid, away);
             avoidCount++;
@@ -105,16 +106,24 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
     vec2 wallForce = AvoidBorders(boid, 100.0);
 	vec2 poiForce = { 0, 0 };
 
-	PointOfInterest* closestPOI = &pointsOfInterest[0];
-	// get closest poi
-    for (int i = 0; i < poiCount; i++) {
+    PointOfInterest* closestPOI = NULL;
+    double closestDistSq = DBL_MAX;
 
-		vec2 distance = poi_get_distance(&pointsOfInterest[i], boid);
+    for (int i = 0; i < poiCount; i++)
+    {
+        if (!pointsOfInterest[i].active)
+        {
+            continue;
+        }
 
-        if (vec_mag(distance) < vec_mag(poi_get_distance(closestPOI, boid))) {
+        vec2 offset = poi_get_direction_vector(&pointsOfInterest[i], boid);
+        double distSq = vec_mag_sq(offset);
+
+        if (distSq < closestDistSq)
+        {
+            closestDistSq = distSq;
             closestPOI = &pointsOfInterest[i];
-		}
-
+        }
     }
 
     poiForce = poi_get_force(closestPOI, boid, &sim);
