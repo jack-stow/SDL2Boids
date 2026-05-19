@@ -11,6 +11,7 @@
 #include "player.h"
 #include "boid.h"
 #include "flockbehavior.h"
+#include "poi.h"
 
 App    app;
 Entity player;
@@ -38,23 +39,34 @@ int main(int argc, char* argv[])
 	double posX = 100.0;
 	double posY = 100.0;
 	double acceleration = 0.08;
-	vec2 speedNormalized = { 0, 0 };
+
+
+	double avoidFactor = 0.25;
+	double matchingFactor = 0.2;
+	double centeringFactor = 0.1;
+	double borderingFactor = 5.0;
+
+	int maxVisible = 10;
+	double visionRadius = 50.0;
+	double protectedRange = 30.0;
+
+	double poiFactor = 1.0;
+
 	int boidCount = 500;
 	Boid* boids = malloc(sizeof(Boid) * boidCount);
-
-	double avoidFactor = 3;
-	double matchingFactor = 3;
-	double centeringFactor = 3;
-	double borderingFactor = 8.0;
-
-	int maxVisible = 20;
-	double visionRadius = 100.0;
-	double protectedRange = 30.0;
 
 
 	for (size_t i = 0; i < boidCount; i++)
 	{
 		boids[i] = boid_create(topSpeed, minSpeed, acceleration, "gfx/boid.png");
+	}
+
+	int poiCount = 5;
+	PointOfInterest* pointsOfInterest = malloc(sizeof(PointOfInterest) * poiCount);
+
+	for (size_t i = 0; i < poiCount; i++)
+	{
+		pointsOfInterest[i] = poi_create_random();
 	}
 
 	initPlayer(&player, posX, posY, topSpeed, acceleration, "gfx/boid.png");
@@ -82,18 +94,28 @@ int main(int argc, char* argv[])
 
 		prepareScene();
 
-		doInput();
+		/*doInput();
 
 		updatePlayer(&player, (vec2) {
 			(double)(app.right - app.left),
 				(double)(app.down - app.up)
 		});
 
-		drawPlayer(&player);
+		drawPlayer(&player);*/
 
 
 		flockStart = SDL_GetPerformanceCounter();
-		HandleBoids(boids, boidCount, avoidFactor, matchingFactor, centeringFactor, borderingFactor, maxVisible, visionRadius, protectedRange, deltaTime);
+		HandleBoids(boids, boidCount, avoidFactor, matchingFactor, centeringFactor, borderingFactor, maxVisible, visionRadius, protectedRange, pointsOfInterest, poiCount, poiFactor, deltaTime);
+
+		for (size_t i = 0; i < poiCount; i++)
+		{
+			if (!pointsOfInterest[i].active) {
+				pointsOfInterest[i] = poi_reinitialize(&pointsOfInterest[i]);
+			}
+
+			poi_draw(&pointsOfInterest[i]);
+		}
+
 		flockEnd = SDL_GetPerformanceCounter();
 		double flockSeconds =
 			(double)(flockEnd - flockStart) / SDL_GetPerformanceFrequency();
@@ -119,6 +141,8 @@ int main(int argc, char* argv[])
 			statsTimer = 0.0;
 			frameCount = 0;
 		}
+
+		draw_circle(player.x, player.y, 10.0);
 
 
 		presentScene();

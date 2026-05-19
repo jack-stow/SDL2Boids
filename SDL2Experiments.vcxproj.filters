@@ -24,6 +24,7 @@
     </ClCompile>
     <ClCompile Include="src\boid.c" />
     <ClCompile Include="src\flockbehavior.c" />
+    <ClCompile Include="src\poi.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -55,6 +56,7 @@
     </ClInclude>
     <ClInclude Include="src\boid.h" />
     <ClInclude Include="src\flockbehavior.h" />
+    <ClInclude Include="src\poi.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

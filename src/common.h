@@ -8,6 +8,7 @@
 #include "SDL2/SDL.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <stdbool.h>
 #include "string.h"
 #include "structs.h"
 #include "vector2.h"
@@ -21,3 +22,4 @@
 
 double angle_lerp(double a, double b, double t);
 double normalize_angle(double a);
+double rand_range_double(double min, double max);

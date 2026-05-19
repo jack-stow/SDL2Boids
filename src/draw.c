@@ -46,3 +46,22 @@ void blit(SDL_Texture* texture, int x, int y, double angle, double scale)
 
 	SDL_RenderCopyEx(app.renderer, texture, NULL, &dest, angle, NULL, SDL_FLIP_NONE);
 }
+
+/// <summary>
+/// currently does not draw a circle. It draws a square. TODO: fix.
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="radius"></param>
+void draw_circle(double x, double y, double radius)
+{
+	SDL_Rect rect;
+
+	rect.w = (int)(radius * 2);
+	rect.h = (int)(radius * 2);
+	rect.x = (int)(x - rect.w / 2);
+	rect.y = (int)(y - rect.h / 2);
+
+	SDL_SetRenderDrawColor(app.renderer, 0, 100, 255, 255);
+	SDL_RenderFillRect(app.renderer, &rect);
+}

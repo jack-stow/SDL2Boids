@@ -6,35 +6,13 @@ Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* te
 {
     Boid boid;
 
-    /*boid.x = (double)(rand() % SCREEN_WIDTH);
-    boid.y = (double)(rand() % SCREEN_HEIGHT);*/
-    
-    //boid.x = ((double)rand() / RAND_MAX) * 200.0;
-	//boid.y = ((double)rand() / RAND_MAX) * 200.0;
-
-    //boid.x = (SCREEN_WIDTH / 2.0) + ((double)rand() / RAND_MAX) * 200.0 - 100.0;
-	//boid.y = (SCREEN_HEIGHT / 2.0) + ((double)rand() / RAND_MAX) * 200.0 - 100.0;
-
-    boid.x = 300 + rand_range(-100, 100);
-    boid.y = 300 + rand_range(-100, 100);
+    boid.x = rand_range_double(50.0, SCREEN_WIDTH - 50.0);
+    boid.y = rand_range_double(50.0, SCREEN_HEIGHT - 50.0);
 
     // Random direction
-    /*vec2 dir = {
+    vec2 dir = {
         ((double)rand() / RAND_MAX) * 2.0 - 1.0,
         ((double)rand() / RAND_MAX) * 2.0 - 1.0
-    };*/
-
-    /*vec2 dir = {
-    1.0,
-    rand_range_double(-0.6, 0.6)
-    };*/
-    /*vec2 dir = {
-    rand_range_double(0.6, 1.0),
-    rand_range_double(-0.8, 0.8)
-    };*/
-    vec2 dir = {
-    rand_range_double(-1.0, 1.0),
-    rand_range_double(-1.0, 1.0)
     };
 
     dir = vec_norm(dir);
@@ -47,8 +25,7 @@ Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* te
     boid.speed = vec_mul(dir, speed);
     boid.desiredSpeed = boid.speed;
 
-    boid.angle =
-        atan2(boid.speed.y, boid.speed.x) * 180.0 / M_PI;
+    boid.angle = atan2(boid.speed.y, boid.speed.x) * 180.0 / M_PI;
 
     boid.desiredAngle = boid.angle;
 

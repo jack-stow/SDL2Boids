@@ -1,12 +1,12 @@
 #include "flockbehavior.h"
 
 
-void HandleBoids(Boid* boids, int numBoids, double avoidFactor, double matchingFactor, double centeringFactor, double borderingFactor, int maxVisible, double visionRadius, double protectedRange, double deltaTime) {
+void HandleBoids(Boid* boids, int numBoids, double avoidFactor, double matchingFactor, double centeringFactor, double borderingFactor, int maxVisible, double visionRadius, double protectedRange, PointOfInterest* pointsOfInterest, int poiCount, double poiFactor, double deltaTime) {
     
 
     for (size_t i = 0; i < numBoids; i++)
     {
-        Flock(&boids[i], boids, numBoids, avoidFactor, matchingFactor, centeringFactor, borderingFactor, maxVisible, visionRadius, protectedRange, deltaTime);
+        Flock(&boids[i], boids, numBoids, avoidFactor, matchingFactor, centeringFactor, borderingFactor, maxVisible, visionRadius, protectedRange, pointsOfInterest, poiCount, poiFactor, deltaTime);
 
         boids[i].x += boids[i].speed.x;
         boids[i].y += boids[i].speed.y;
@@ -21,7 +21,7 @@ void HandleBoids(Boid* boids, int numBoids, double avoidFactor, double matchingF
     }
 }
 
-void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double matchingFactor, double centeringFactor, double borderingFactor, int maxVisible, double visionRadius, double protectedRange, double deltaTime) {
+void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double matchingFactor, double centeringFactor, double borderingFactor, int maxVisible, double visionRadius, double protectedRange, PointOfInterest* pointsOfInterest, int poiCount, double poiFactor, double deltaTime) {
     vec2 avoid = { 0, 0 };
     vec2 align = { 0, 0 };
     vec2 cohere = { 0, 0 };
@@ -102,6 +102,17 @@ void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double mat
     flockForce = vec_add(flockForce, vec_mul(align, matchingFactor));
     flockForce = vec_add(flockForce, vec_mul(cohere, centeringFactor));
 
+    vec2 wallForce = AvoidBorders(boid, 100.0);
+	vec2 poiForce = { 0, 0 };
+	// Add forces from points of interest
+    for (int i = 0; i < poiCount; i++) {
+		poiForce = vec_add(poiForce, poi_get_force(&pointsOfInterest[i], boid));
+		consume_poi(&pointsOfInterest[i], boid, 10.0, 1);
+    }
+
+    flockForce = vec_add(flockForce, vec_mul(poiForce, poiFactor));
+
+    flockForce = vec_add(flockForce, vec_mul(wallForce, borderingFactor));
 
     //vec2 borderForce = AvoidBorders(boid, 100.0);
     double turnSpeed = 30.0 / boid->topSpeed;
