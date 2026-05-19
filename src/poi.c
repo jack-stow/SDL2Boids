@@ -6,10 +6,10 @@ PointOfInterest poi_create_random(void)
 	PointOfInterest poi;
 	poi.x = rand_range_double(50.0, SCREEN_WIDTH - 50.0);
 	poi.y = rand_range_double(50.0, SCREEN_HEIGHT - 50.0);
-	poi.radius = 100.0;
-	poi.strength = rand_range_double(0.0, 1.0);
+	poi.radius = POI_RADIUS;
+	poi.strength = rand_range_double(0.1, 1.0) * POI_STRENGTH;
+	poi.health = POI_HEALTH;
 	poi.active = true;
-	poi.health = 10;
 	return poi;
 }
 
@@ -17,10 +17,10 @@ PointOfInterest poi_reinitialize(PointOfInterest* poi)
 {
 	poi->x = rand_range_double(50.0, SCREEN_WIDTH - 50.0);
 	poi->y = rand_range_double(50.0, SCREEN_HEIGHT - 50.0);
-	poi->radius = rand_range_double(50.0, 150.0);
-	poi->strength = rand_range_double(1.0, 2.0);
+	poi->radius = POI_RADIUS;
+	poi->strength = rand_range_double(0.1, 1.0) * POI_STRENGTH;
+	poi->health = POI_HEALTH;
 	poi->active = true;
-	poi->health = 10;
 	return *poi;
 }
 
@@ -31,6 +31,13 @@ void poi_draw(PointOfInterest* poi)
 		return;
 	}
 	draw_circle(poi->x, poi->y, 10.0);
+}
+
+vec2 poi_get_distance(PointOfInterest* poi, Boid* boid)
+{
+	vec2 boidPos = { boid->x, boid->y };
+	vec2 poiPos = { poi->x, poi->y };
+	return vec_sub(poiPos, boidPos);
 }
 
 vec2 poi_get_force(PointOfInterest* poi, Boid* boid)

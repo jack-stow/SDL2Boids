@@ -33,26 +33,26 @@ int main(int argc, char* argv[])
 	initSDL();
 
 	atexit(cleanup);
-
-	double topSpeed = 5.0;
-	double minSpeed = topSpeed * 0.4;
 	double posX = 100.0;
 	double posY = 100.0;
-	double acceleration = 0.08;
+
+	double topSpeed = TOP_SPEED;
+	double minSpeed = MIN_SPEED;
+	double acceleration = ACCELERATION;
 
 
-	double avoidFactor = 0.25;
-	double matchingFactor = 0.2;
-	double centeringFactor = 0.1;
-	double borderingFactor = 5.0;
+	double avoidFactor = AVOID_FACTOR;
+	double matchingFactor = MATCHING_FACTOR;
+	double centeringFactor = CENTERING_FACTOR;
+	double borderingFactor = BORDERING_FACTOR;
 
-	int maxVisible = 10;
-	double visionRadius = 50.0;
-	double protectedRange = 30.0;
+	int maxVisible = MAX_VISIBLE;
+	double visionRadius = VISION_RADIUS;
+	double protectedRange = PROTECTED_RANGE;
 
-	double poiFactor = 1.0;
+	double poiFactor = POI_FACTOR;
 
-	int boidCount = 500;
+	int boidCount = BOID_COUNT;
 	Boid* boids = malloc(sizeof(Boid) * boidCount);
 
 
@@ -91,10 +91,10 @@ int main(int argc, char* argv[])
 			SDL_GetPerformanceFrequency();
 
 		lastCounter = currentCounter;
-
+		Uint64 frameStart = SDL_GetPerformanceCounter();
 		prepareScene();
-
-		/*doInput();
+		doInput();
+		/*
 
 		updatePlayer(&player, (vec2) {
 			(double)(app.right - app.left),
@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
 		flockTimeAccum += flockSeconds;
 		flockCallCount++;
 		statsTimer += deltaTime;
+		frameCount++;
 		if (statsTimer >= 1.0)
 		{
 			double avgMs = (flockTimeAccum / flockCallCount) * 1000.0;
@@ -142,12 +143,24 @@ int main(int argc, char* argv[])
 			frameCount = 0;
 		}
 
-		draw_circle(player.x, player.y, 10.0);
+		//draw_circle(player.x, player.y, 10.0);
 
 
 		presentScene();
 
-		SDL_Delay(16);
+		Uint64 frameEnd = SDL_GetPerformanceCounter();
+
+		double frameSeconds =
+			(double)(frameEnd - frameStart) / SDL_GetPerformanceFrequency();
+
+		double targetFrameTime = 1.0 / 60.0;
+
+		if (frameSeconds < targetFrameTime)
+		{
+			SDL_Delay((Uint32)((targetFrameTime - frameSeconds) * 1000.0));
+		}
+
+		//SDL_Delay(16);
 		
 	}
 

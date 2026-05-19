@@ -104,11 +104,21 @@ void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double mat
 
     vec2 wallForce = AvoidBorders(boid, 100.0);
 	vec2 poiForce = { 0, 0 };
-	// Add forces from points of interest
+
+	PointOfInterest* closestPOI = &pointsOfInterest[0];
+	// get closest poi
     for (int i = 0; i < poiCount; i++) {
-		poiForce = vec_add(poiForce, poi_get_force(&pointsOfInterest[i], boid));
-		consume_poi(&pointsOfInterest[i], boid, 10.0, 1);
+
+		vec2 distance = poi_get_distance(&pointsOfInterest[i], boid);
+
+        if (vec_mag(distance) < vec_mag(poi_get_distance(closestPOI, boid))) {
+            closestPOI = &pointsOfInterest[i];
+		}
+
     }
+
+    poiForce = poi_get_force(closestPOI, boid);
+    consume_poi(closestPOI, boid, POI_CONSUME_RADIUS, 1);
 
     flockForce = vec_add(flockForce, vec_mul(poiForce, poiFactor));
 
