@@ -35,6 +35,13 @@ double vec_mag(vec2 v)
     return sqrt(v.x * v.x + v.y * v.y);
 }
 
+/// <summary>
+/// produces a unit vector in the same direction as the input vector. 
+/// If the input vector has zero magnitude, it returns a zero vector.
+/// returns a new vector that is the normalized version of the input vector. (new struct)
+/// </summary>
+/// <param name="v"></param>
+/// <returns></returns>
 vec2 vec_norm(vec2 v)
 {
     double mag = vec_mag(v);
@@ -91,4 +98,26 @@ vec2 vec_lerp(vec2 a, vec2 b, double t)
     result.y = a.y + (b.y - a.y) * t;
 
     return result;
+}
+
+vec2 vec_clamp_mag(vec2 v, double minSpeed, double maxSpeed)
+{
+    double mag = vec_mag(v);
+
+    if (mag == 0.0)
+    {
+        return v;
+    }
+
+    if (mag > maxSpeed)
+    {
+        return vec_mul(vec_norm(v), maxSpeed);
+    }
+
+    if (mag < minSpeed)
+    {
+        return vec_mul(vec_norm(v), minSpeed);
+    }
+
+    return v;
 }

@@ -4,3 +4,4 @@
 
 #define SCREEN_WIDTH  1280
 #define SCREEN_HEIGHT 720
+#define BOID_SCALE 0.25

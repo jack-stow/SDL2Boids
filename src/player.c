@@ -47,5 +47,5 @@ void updatePlayer(Entity* player, vec2 inputDirection)
 
 void drawPlayer(Entity* player)
 {
-    blit(player->texture, player->x, player->y, player->angle);
+    blit(player->texture, player->x, player->y, player->angle, 0.5);
 }

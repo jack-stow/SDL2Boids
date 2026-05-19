@@ -1,6 +1,27 @@
 #include "flockbehavior.h"
 
-void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double matchingFactor, double centeringFactor, int maxVisible, double visionRadius, double protectedRange, double deltaTime) {
+
+void HandleBoids(Boid* boids, int numBoids, double avoidFactor, double matchingFactor, double centeringFactor, double borderingFactor, int maxVisible, double visionRadius, double protectedRange, double deltaTime) {
+    
+
+    for (size_t i = 0; i < numBoids; i++)
+    {
+        Flock(&boids[i], boids, numBoids, avoidFactor, matchingFactor, centeringFactor, borderingFactor, maxVisible, visionRadius, protectedRange, deltaTime);
+
+        boids[i].x += boids[i].speed.x;
+        boids[i].y += boids[i].speed.y;
+
+        if (boids[i].x < 0) boids[i].x += SCREEN_WIDTH;
+        if (boids[i].x > SCREEN_WIDTH) boids[i].x -= SCREEN_WIDTH;
+
+        if (boids[i].y < 0) boids[i].y += SCREEN_HEIGHT;
+        if (boids[i].y > SCREEN_HEIGHT) boids[i].y -= SCREEN_HEIGHT;
+
+        drawBoid(&boids[i]);
+    }
+}
+
+void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double matchingFactor, double centeringFactor, double borderingFactor, int maxVisible, double visionRadius, double protectedRange, double deltaTime) {
     vec2 avoid = { 0, 0 };
     vec2 align = { 0, 0 };
     vec2 cohere = { 0, 0 };
@@ -47,7 +68,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double mat
         }
 
         // Alignment
-        align = vec_add(align, other->desiredSpeed);
+        align = vec_add(align, other->speed);
         alignCount++;
 
         // Cohesion
@@ -64,7 +85,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double mat
     if (alignCount > 0)
     {
         align = vec_mul(align, 1.0 / alignCount);
-        align = vec_sub(align, boid->desiredSpeed);
+        align = vec_sub(align, boid->speed);
         align = vec_norm(align);
     }
 
@@ -78,41 +99,80 @@ void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double mat
     vec2 flockForce = { 0, 0 };
 
     flockForce = vec_add(flockForce, vec_mul(avoid, avoidFactor));
-    flockForce = vec_add(flockForce, vec_mul(align, 1.0 / matchingFactor));
-    flockForce = vec_add(flockForce, vec_mul(cohere, 1.0 / centeringFactor));
+    flockForce = vec_add(flockForce, vec_mul(align, matchingFactor));
+    flockForce = vec_add(flockForce, vec_mul(cohere, centeringFactor));
 
-    boid->desiredSpeed = vec_add(boid->desiredSpeed, flockForce);
 
-    if (vec_mag(boid->desiredSpeed) > boid->topSpeed)
+    //vec2 borderForce = AvoidBorders(boid, 100.0);
+
+    vec2 desiredSpeed = boid->speed;
+
+    desiredSpeed = vec_add(desiredSpeed, vec_mul(flockForce, boid->acceleration));
+
+   /* desiredSpeed = vec_add(
+        desiredSpeed,
+        vec_mul(borderForce, borderingFactor)
+    );*/
+
+
+
+    if (vec_mag(desiredSpeed) > boid->topSpeed)
     {
-        boid->desiredSpeed = vec_mul(vec_norm(boid->desiredSpeed), boid->topSpeed);
+        desiredSpeed = vec_mul(
+            vec_norm(desiredSpeed),
+            boid->topSpeed
+        );
     }
 
-    boid->speed = vec_lerp(boid->speed, boid->desiredSpeed, boid->acceleration * deltaTime);
+    boid->desiredSpeed = desiredSpeed;
+
+    boid->speed = vec_lerp(
+        boid->speed,
+        boid->desiredSpeed,
+        boid->acceleration
+    );
+
+
+
+    boid->speed = vec_clamp_mag(boid->speed, boid->minSpeed, boid->topSpeed);
+
+    if (vec_mag(boid->speed) > 0.01)
+    {
+        boid->desiredAngle = atan2(boid->speed.y, boid->speed.x) * 180.0 / M_PI;
+    }
+
+
+    boid->angle = normalize_angle(
+        angle_lerp(boid->angle, boid->desiredAngle, 0.25)
+    );
 }
 
 
 vec2 AvoidBorders(Boid* boid, double borderMargin)
 {
-    vec2 acceleration = { 0, 0 };
+    vec2 force = { 0, 0 };
 
     if (boid->x < borderMargin)
     {
-        acceleration.x = 1.0;
+        double t = (borderMargin - boid->x) / borderMargin;
+        force.x += t * t;
     }
     else if (boid->x > SCREEN_WIDTH - borderMargin)
     {
-        acceleration.x = -1.0;
+        double t = (boid->x - (SCREEN_WIDTH - borderMargin)) / borderMargin;
+        force.x -= t * t;
     }
 
     if (boid->y < borderMargin)
     {
-        acceleration.y = 1.0;
+        double t = (borderMargin - boid->y) / borderMargin;
+        force.y += t * t;
     }
     else if (boid->y > SCREEN_HEIGHT - borderMargin)
     {
-        acceleration.y = -1.0;
+        double t = (boid->y - (SCREEN_HEIGHT - borderMargin)) / borderMargin;
+        force.y -= t * t;
     }
 
-    return vec_norm(acceleration);
+    return force;
 }

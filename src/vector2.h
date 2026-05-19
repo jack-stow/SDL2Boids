@@ -24,4 +24,6 @@ vec2 vec2_zero(vec2* v);
 
 vec2 vec_lerp(vec2 a, vec2 b, double t);
 
+vec2 vec_clamp_mag(vec2 v, double minSpeed, double maxSpeed);
+
 #endif

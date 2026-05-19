@@ -4,5 +4,5 @@
 
 void prepareScene(void);
 void presentScene(void);
-void blit(SDL_Texture* texture, int x, int y, double angle);
+void blit(SDL_Texture* texture, int x, int y, double angle, double scale);
 SDL_Texture* loadTexture(char* filename);

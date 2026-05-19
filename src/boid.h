@@ -13,6 +13,7 @@ typedef struct
 	double angle;
 	double desiredAngle;
 
+	double minSpeed;
 	double topSpeed;
 	double acceleration;
 
@@ -22,7 +23,7 @@ typedef struct
 
 
 
-Boid boid_create(double topSpeed, double acceleration, char* texture);
+Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* texture);
 
 
 void drawBoid(Boid* boid);

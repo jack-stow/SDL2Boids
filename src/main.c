@@ -15,39 +15,61 @@
 App    app;
 Entity player;
 
+
+void displayFPS(double fps)
+{
+	char title[128];
+	snprintf(title, sizeof(title), "FPS: %.2f", fps);
+
+	SDL_SetWindowTitle(app.window, title);
+}
+
 int main(int argc, char* argv[])
 {
 	memset(&app, 0, sizeof(App));
 	memset(&player, 0, sizeof(Entity));
-
+	srand((unsigned int)time(NULL));
 	initSDL();
 
 	atexit(cleanup);
 
-	int topSpeed = 8;
+	double topSpeed = 5.0;
+	double minSpeed = topSpeed * 0.4;
 	double posX = 100.0;
 	double posY = 100.0;
-	double acceleration = 0.05;
+	double acceleration = 0.08;
 	vec2 speedNormalized = { 0, 0 };
-	int boidCount = 10;
+	int boidCount = 500;
 	Boid* boids = malloc(sizeof(Boid) * boidCount);
 
-	double avoidFactor = 0.05;
-	double matchingFactor = 0.05;
-	double centeringFactor = 0.001;	
+	double avoidFactor = 1.0;
+	double matchingFactor = 0.2;
+	double centeringFactor = 0.08;
+	double borderingFactor = 8.0;
 
-	int maxVisible = 10;
-	double visionRadius = 100.0;
-	double protectedRange = 20.0;
+	int maxVisible = 50;
+	double visionRadius = 180.0;
+	double protectedRange = 14.0;
 
 
 	for (size_t i = 0; i < boidCount; i++)
 	{
-		boids[i] = boid_create(topSpeed, acceleration, "gfx/boid.png");
+		boids[i] = boid_create(topSpeed, minSpeed, acceleration, "gfx/boid.png");
 	}
 
 	initPlayer(&player, posX, posY, topSpeed, acceleration, "gfx/boid.png");
 	Uint64 lastCounter = SDL_GetPerformanceCounter();
+
+	double fpsTimer = 0.0;
+	int frameCount = 0;
+
+	Uint64 flockStart = 0;
+	Uint64 flockEnd = 0;
+
+	double flockTimeAccum = 0.0;
+	int flockCallCount = 0;
+	double statsTimer = 0.0;
+
 	while (1)
 	{
 		Uint64 currentCounter = SDL_GetPerformanceCounter();
@@ -69,16 +91,34 @@ int main(int argc, char* argv[])
 
 		drawPlayer(&player);
 
-		for (size_t i = 0; i < boidCount; i++)
+
+		flockStart = SDL_GetPerformanceCounter();
+		HandleBoids(boids, boidCount, avoidFactor, matchingFactor, centeringFactor, borderingFactor, maxVisible, visionRadius, protectedRange, deltaTime);
+		flockEnd = SDL_GetPerformanceCounter();
+		double flockSeconds =
+			(double)(flockEnd - flockStart) / SDL_GetPerformanceFrequency();
+
+		flockTimeAccum += flockSeconds;
+		flockCallCount++;
+		statsTimer += deltaTime;
+		if (statsTimer >= 1.0)
 		{
-			Flock(&boids[i], boids, boidCount, avoidFactor, matchingFactor, centeringFactor, maxVisible, visionRadius, protectedRange, deltaTime);
+			double avgMs = (flockTimeAccum / flockCallCount) * 1000.0;
 
-			boids[i].x += boids[i].speed.x;
-			boids[i].y += boids[i].speed.y;
+			char title[128];
+			snprintf(title, sizeof(title),
+				"FPS: %.1f | HandleBoids avg: %.3f ms",
+				(double)frameCount / statsTimer,
+				avgMs
+			);
 
-			drawBoid(&boids[i]);	
+			SDL_SetWindowTitle(app.window, title);
+
+			flockTimeAccum = 0.0;
+			flockCallCount = 0;
+			statsTimer = 0.0;
+			frameCount = 0;
 		}
-
 
 
 		presentScene();
