@@ -3,13 +3,12 @@
 
 void HandleBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime) {
     
-
     for (size_t i = 0; i < numBoids; i++)
     {
         Flock(&boids[i], boids, numBoids, sim, pointsOfInterest, poiCount, deltaTime);
 
-        boids[i].x += boids[i].speed.x;
-        boids[i].y += boids[i].speed.y;
+        boids[i].x += boids[i].speed.x * deltaTime;
+        boids[i].y += boids[i].speed.y * deltaTime;
 
 
         if (boids[i].x < 0) boids[i].x += SCREEN_WIDTH;
@@ -118,8 +117,8 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 
     }
 
-    poiForce = poi_get_force(closestPOI, boid);
-    consume_poi(closestPOI, boid, POI_CONSUME_RADIUS, 1);
+    poiForce = poi_get_force(closestPOI, boid, &sim);
+    consume_poi(closestPOI, boid, 1);
 
     flockForce = vec_add(flockForce, vec_mul(poiForce, sim.poiFactor));
 
@@ -130,7 +129,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 
     vec2 acceleration = vec_mul(flockForce, 1.0 / turnSpeed);
 
-    boid->speed = vec_add(boid->speed, acceleration);
+    boid->speed = vec_add(boid->speed, vec_mul(acceleration, deltaTime));
 
     boid->speed = vec_clamp_mag(
         boid->speed,

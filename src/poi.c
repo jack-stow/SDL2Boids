@@ -6,8 +6,8 @@ PointOfInterest poi_create_random(void)
 	PointOfInterest poi;
 	poi.x = rand_range_double(50.0, SCREEN_WIDTH - 50.0);
 	poi.y = rand_range_double(50.0, SCREEN_HEIGHT - 50.0);
-	poi.radius = POI_RADIUS;
-	poi.strength = rand_range_double(0.1, 1.0) * POI_STRENGTH;
+	poi.attractionRadius = POI_ATTRACTION_RADIUS;
+	poi.radius = POI_CONSUME_RADIUS;
 	poi.health = POI_HEALTH;
 	poi.active = true;
 	return poi;
@@ -17,20 +17,21 @@ PointOfInterest poi_reinitialize(PointOfInterest* poi)
 {
 	poi->x = rand_range_double(50.0, SCREEN_WIDTH - 50.0);
 	poi->y = rand_range_double(50.0, SCREEN_HEIGHT - 50.0);
-	poi->radius = POI_RADIUS;
-	poi->strength = rand_range_double(0.1, 1.0) * POI_STRENGTH;
+	poi->attractionRadius = POI_ATTRACTION_RADIUS;
+	poi->radius = POI_CONSUME_RADIUS;
 	poi->health = POI_HEALTH;
 	poi->active = true;
 	return *poi;
 }
 
-void poi_draw(PointOfInterest* poi)
+void poi_draw(PointOfInterest* poi, Color color)
 {
 	if (!poi->active)
 	{
 		return;
 	}
-	draw_circle(poi->x, poi->y, 10.0);
+	draw_circle(poi->x, poi->y, poi->radius, color, false);
+	draw_circle(poi->x, poi->y, poi->attractionRadius, color, false);
 }
 
 vec2 poi_get_distance(PointOfInterest* poi, Boid* boid)
@@ -40,7 +41,7 @@ vec2 poi_get_distance(PointOfInterest* poi, Boid* boid)
 	return vec_sub(poiPos, boidPos);
 }
 
-vec2 poi_get_force(PointOfInterest* poi, Boid* boid)
+vec2 poi_get_force(PointOfInterest* poi, Boid* boid, SimulationParameters* sim)
 {
 	if (!poi->active)
 	{
@@ -50,15 +51,15 @@ vec2 poi_get_force(PointOfInterest* poi, Boid* boid)
 	vec2 poiPos = { poi->x, poi->y };
 	vec2 direction = vec_sub(poiPos, boidPos);
 	double distance = vec_mag(direction);
-	if (distance < poi->radius)
+	if (distance < poi->attractionRadius)
 	{
-		double force = (1.0 - distance / poi->radius) * poi->strength;
+		double force = (1.0 - distance / poi->attractionRadius) * sim->poiFactor;
 		return vec_mul(direction, force);
 	}
 	return (vec2){0, 0};
 }
 
-bool consume_poi(PointOfInterest* poi, Boid* boid, double consumeRadius, int damage)
+bool consume_poi(PointOfInterest* poi, Boid* boid, int damage)
 {
 	if (!poi->active)
 	{
@@ -67,7 +68,7 @@ bool consume_poi(PointOfInterest* poi, Boid* boid, double consumeRadius, int dam
 	vec2 boidPos = { boid->x, boid->y };
 	vec2 poiPos = { poi->x, poi->y };
 	double dist = vec_mag(vec_sub(poiPos, boidPos));
-	if (dist <= consumeRadius)
+	if (dist <= poi->radius)
 	{
 		poi->health -= damage;
 		if (poi->health <= 0)

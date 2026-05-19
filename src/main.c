@@ -84,6 +84,8 @@ int main(int argc, char* argv[])
 	int flockCallCount = 0;
 	double statsTimer = 0.0;
 
+	Color poiColor = { 0, 255, 0, 255 };
+
 	while (1)
 	{
 		Uint64 currentCounter = SDL_GetPerformanceCounter();
@@ -115,8 +117,14 @@ int main(int argc, char* argv[])
 				pointsOfInterest[i] = poi_reinitialize(&pointsOfInterest[i]);
 			}
 
-			poi_draw(&pointsOfInterest[i]);
+			poi_draw(&pointsOfInterest[i], poiColor);
 		}
+
+		draw_circle((int)boids[0].x, (int)boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
+
+		draw_circle((int)boids[0].x, (int)boids[0].y, sim.protectedRange, (Color) { 255, 0, 255, 255 }, false);
+
+
 
 		flockEnd = SDL_GetPerformanceCounter();
 		double flockSeconds =
@@ -144,8 +152,6 @@ int main(int argc, char* argv[])
 			statsTimer = 0.0;
 			frameCount = 0;
 		}
-
-		//draw_circle(player.x, player.y, 10.0);
 
 
 		presentScene();

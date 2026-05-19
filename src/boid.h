@@ -4,24 +4,25 @@
 #define BOID_H
 
 #define BOID_SCALE 0.2
+#define FRAME_RATE 60.0
 
-#define TOP_SPEED         5.0
-#define MIN_SPEED         (TOP_SPEED * 0.4)
-#define ACCELERATION      0.08
+#define TOP_SPEED        (5.0 * FRAME_RATE)
+#define MIN_SPEED        (TOP_SPEED * 0.4)
+#define ACCELERATION     (0.08 * FRAME_RATE)
 
-#define AVOID_FACTOR      0.25
-#define MATCHING_FACTOR   0.2
-#define CENTERING_FACTOR  0.1
-#define BORDERING_FACTOR  5.0
-#define POI_FACTOR         1.0
+#define AVOID_FACTOR     (0.25 * FRAME_RATE)
+#define MATCHING_FACTOR  (0.2 * FRAME_RATE)
+#define CENTERING_FACTOR (0.1 * FRAME_RATE)
+#define BORDERING_FACTOR (5.0 * FRAME_RATE)
+#define POI_FACTOR       (0.5)
 
 
-#define MAX_VISIBLE        20
+#define MAX_VISIBLE        20.0
 #define VISION_RADIUS      70.0
 #define PROTECTED_RANGE    30.0
 
 
-#define BOID_COUNT 	  800
+#define BOID_COUNT 	  500
 
 
 

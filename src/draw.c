@@ -12,7 +12,8 @@ extern App app;
 
 void prepareScene(void)
 {
-	SDL_SetRenderDrawColor(app.renderer, 96, 128, 255, 255);
+	/*SDL_SetRenderDrawColor(app.renderer, 96, 128, 255, 255);*/
+    SDL_SetRenderDrawColor(app.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(app.renderer);
 }
 
@@ -32,6 +33,8 @@ SDL_Texture* loadTexture(char* filename)
 	return texture;
 }
 
+
+
 void blit(SDL_Texture* texture, int x, int y, double angle, double scale)
 {
 	SDL_Rect dest;
@@ -39,29 +42,60 @@ void blit(SDL_Texture* texture, int x, int y, double angle, double scale)
 
 	SDL_QueryTexture(texture, NULL, NULL, &w, &h);
 
-	dest.x = x;
-	dest.y = y;
-	dest.w = (int)(w * scale);
-	dest.h = (int)(h * scale);
+    dest.w = (int)(w * scale);
+    dest.h = (int)(h * scale);
+
+    dest.x = (int)(x - dest.w / 2);
+    dest.y = (int)(y - dest.h / 2);
+
 
 	SDL_RenderCopyEx(app.renderer, texture, NULL, &dest, angle, NULL, SDL_FLIP_NONE);
 }
 
-/// <summary>
-/// currently does not draw a circle. It draws a square. TODO: fix.
-/// </summary>
-/// <param name="x"></param>
-/// <param name="y"></param>
-/// <param name="radius"></param>
-void draw_circle(double x, double y, double radius)
+
+//void draw_rect(double x, double y, double radius)
+//{
+//	SDL_Rect rect;
+//
+//	rect.w = (int)(radius * 2);
+//	rect.h = (int)(radius * 2);
+//	rect.x = (int)(x - rect.w / 2);
+//	rect.y = (int)(y - rect.h / 2);
+//
+//	SDL_SetRenderDrawColor(app.renderer, 0, 100, 255, 255);
+//	SDL_RenderFillRect(app.renderer, &rect);
+//}
+
+void draw_circle(double x, double y, double radius, Color color, bool filled)
 {
-	SDL_Rect rect;
+    SDL_SetRenderDrawColor(app.renderer, color.r, color.g, color.b, color.a);
+    int cx = (int)x;
+    int cy = (int)y;
+    int r = (int)radius;
 
-	rect.w = (int)(radius * 2);
-	rect.h = (int)(radius * 2);
-	rect.x = (int)(x - rect.w / 2);
-	rect.y = (int)(y - rect.h / 2);
+    for (int dy = -r; dy <= r; dy++)
+    {
+        for (int dx = -r; dx <= r; dx++)
+        {
+            int distSq = dx * dx + dy * dy;
+            int radiusSq = r * r;
 
-	SDL_SetRenderDrawColor(app.renderer, 0, 100, 255, 255);
-	SDL_RenderFillRect(app.renderer, &rect);
+            if (filled)
+            {
+                if (distSq <= radiusSq)
+                {
+                    SDL_RenderDrawPoint(app.renderer, cx + dx, cy + dy);
+                }
+            }
+            else
+            {
+                // outline thickness tolerance
+                if (distSq >= radiusSq - r &&
+                    distSq <= radiusSq + r)
+                {
+                    SDL_RenderDrawPoint(app.renderer, cx + dx, cy + dy);
+                }
+            }
+        }
+    }
 }
