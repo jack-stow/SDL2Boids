@@ -104,37 +104,17 @@ void Flock(Boid* boid, Boid* boids, int numBoids, double avoidFactor, double mat
 
 
     //vec2 borderForce = AvoidBorders(boid, 100.0);
+    double turnSpeed = 30.0 / boid->topSpeed;
 
-    vec2 desiredSpeed = boid->speed;
+    vec2 acceleration = vec_mul(flockForce, 1.0 / turnSpeed);
 
-    desiredSpeed = vec_add(desiredSpeed, vec_mul(flockForce, boid->acceleration));
+    boid->speed = vec_add(boid->speed, acceleration);
 
-   /* desiredSpeed = vec_add(
-        desiredSpeed,
-        vec_mul(borderForce, borderingFactor)
-    );*/
-
-
-
-    if (vec_mag(desiredSpeed) > boid->topSpeed)
-    {
-        desiredSpeed = vec_mul(
-            vec_norm(desiredSpeed),
-            boid->topSpeed
-        );
-    }
-
-    boid->desiredSpeed = desiredSpeed;
-
-    boid->speed = vec_lerp(
+    boid->speed = vec_clamp_mag(
         boid->speed,
-        boid->desiredSpeed,
-        boid->acceleration
+        boid->minSpeed,
+        boid->topSpeed
     );
-
-
-
-    boid->speed = vec_clamp_mag(boid->speed, boid->minSpeed, boid->topSpeed);
 
     if (vec_mag(boid->speed) > 0.01)
     {

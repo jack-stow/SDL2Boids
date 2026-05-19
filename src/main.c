@@ -42,14 +42,14 @@ int main(int argc, char* argv[])
 	int boidCount = 500;
 	Boid* boids = malloc(sizeof(Boid) * boidCount);
 
-	double avoidFactor = 1.0;
-	double matchingFactor = 0.2;
-	double centeringFactor = 0.08;
+	double avoidFactor = 3;
+	double matchingFactor = 3;
+	double centeringFactor = 3;
 	double borderingFactor = 8.0;
 
-	int maxVisible = 50;
-	double visionRadius = 180.0;
-	double protectedRange = 14.0;
+	int maxVisible = 20;
+	double visionRadius = 100.0;
+	double protectedRange = 30.0;
 
 
 	for (size_t i = 0; i < boidCount; i++)

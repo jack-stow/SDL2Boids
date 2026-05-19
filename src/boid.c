@@ -28,11 +28,14 @@ Boid boid_create(double topSpeed, double minSpeed, double acceleration, char* te
     1.0,
     rand_range_double(-0.6, 0.6)
     };*/
-    vec2 dir = {
+    /*vec2 dir = {
     rand_range_double(0.6, 1.0),
     rand_range_double(-0.8, 0.8)
+    };*/
+    vec2 dir = {
+    rand_range_double(-1.0, 1.0),
+    rand_range_double(-1.0, 1.0)
     };
-
 
     dir = vec_norm(dir);
 
