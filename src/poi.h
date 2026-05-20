@@ -2,9 +2,10 @@
 #include "boid.h"
 #include "vector2.h"
 
-#define POI_HEALTH 100
-#define POI_ATTRACTION_RADIUS 200.0
-#define POI_CONSUME_RADIUS 10.0
+#define NUM_POI 10
+#define POI_HEALTH 500
+#define POI_ATTRACTION_RADIUS 500.0
+#define POI_CONSUME_RADIUS 30.0
 
 
 typedef struct

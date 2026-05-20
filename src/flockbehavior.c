@@ -125,25 +125,27 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
             closestPOI = &pointsOfInterest[i];
         }
     }
-
-    poiForce = poi_get_force(closestPOI, boid, &sim);
-    consume_poi(closestPOI, boid, 1);
+    if (closestPOI != NULL)
+    {
+        poiForce = poi_get_force(closestPOI, boid, &sim);
+        consume_poi(closestPOI, boid, 1);
+    }
 
     flockForce = vec_add(flockForce, vec_mul(poiForce, sim.poiFactor));
 
     flockForce = vec_add(flockForce, vec_mul(wallForce, sim.borderingFactor));
 
     //vec2 borderForce = AvoidBorders(boid, 100.0);
-    double turnSpeed = 30.0 / boid->topSpeed;
+    //double turnSpeed = (80.0) / sim.topSpeed;
 
-    vec2 acceleration = vec_mul(flockForce, 1.0 / turnSpeed);
+    vec2 acceleration = vec_mul(flockForce, 1.0 / sim.turnSpeed);
 
     boid->speed = vec_add(boid->speed, vec_mul(acceleration, deltaTime));
 
     boid->speed = vec_clamp_mag(
         boid->speed,
-        boid->minSpeed,
-        boid->topSpeed
+        sim.minSpeed,
+        sim.topSpeed
     );
 
     if (vec_mag(boid->speed) > 0.01)

@@ -29,9 +29,6 @@ Boid boid_create(SimulationParameters sim, char* texture)
 
     boid.desiredAngle = boid.angle;
 
-    boid.topSpeed = sim.topSpeed;
-    boid.acceleration = sim.acceleration;
-
     boid.texture = loadTexture(texture);
 
     return boid;

@@ -3,23 +3,24 @@
 #ifndef BOID_H
 #define BOID_H
 
-#define BOID_SCALE 0.2
+#define BOID_SCALE 0.1
 #define FRAME_RATE 60.0
 
 #define TOP_SPEED        (5.0 * FRAME_RATE)
 #define MIN_SPEED        (TOP_SPEED * 0.4)
-#define ACCELERATION     (0.08 * FRAME_RATE)
+#define TURN_SPEED       (30.0 / TOP_SPEED)
+#define ACCELERATION     (0.1 * FRAME_RATE)
 
-#define AVOID_FACTOR     (0.25 * FRAME_RATE)
-#define MATCHING_FACTOR  (0.2 * FRAME_RATE)
+#define AVOID_FACTOR     (1.35 * FRAME_RATE)
+#define MATCHING_FACTOR  (0.1 * FRAME_RATE)
 #define CENTERING_FACTOR (0.1 * FRAME_RATE)
 #define BORDERING_FACTOR (5.0 * FRAME_RATE)
-#define POI_FACTOR       (0.5)
+#define POI_FACTOR       (10.0)
 
 
-#define MAX_VISIBLE        20.0
+#define MAX_VISIBLE        10.0
 #define VISION_RADIUS      70.0
-#define PROTECTED_RANGE    30.0
+#define PROTECTED_RANGE    5.0
 
 
 #define BOID_COUNT 	  500
@@ -37,10 +38,6 @@ typedef struct
 	double angle;
 	double desiredAngle;
 
-	double minSpeed;
-	double topSpeed;
-	double acceleration;
-
 
 	SDL_Texture* texture;
 } Boid;
@@ -49,6 +46,7 @@ typedef struct
 {
 	double topSpeed;
 	double minSpeed;
+	double turnSpeed;
 	double acceleration;
 
 	double avoidFactor;

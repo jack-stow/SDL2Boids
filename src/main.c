@@ -1,6 +1,3 @@
-/*
- * Copyright (C) 2015-2018,2022 Parallel Realities. All rights reserved.
- */
 
 #include "common.h"
 
@@ -40,6 +37,7 @@ int main(int argc, char* argv[])
 	SimulationParameters sim = {
 		.topSpeed = TOP_SPEED,
 		.minSpeed = MIN_SPEED,
+		.turnSpeed = TURN_SPEED,
 		.acceleration = ACCELERATION,
 
 		.avoidFactor = AVOID_FACTOR,
@@ -65,7 +63,7 @@ int main(int argc, char* argv[])
 		boids[i] = boid_create(sim, "gfx/boid.png");
 	}
 
-	int poiCount = 5;
+	int poiCount = NUM_POI;
 	PointOfInterest* pointsOfInterest = malloc(sizeof(PointOfInterest) * poiCount);
 
 	for (size_t i = 0; i < poiCount; i++)
@@ -142,7 +140,7 @@ int main(int argc, char* argv[])
 
 			char title[128];
 			snprintf(title, sizeof(title),
-				"FPS: %.1f | HandleBoids avg: %.3f ms",
+				"FPS: %.1f | Flock avg: %.3f ms",
 				(double)frameCount / statsTimer,
 				avgMs
 			);

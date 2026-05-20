@@ -34,6 +34,7 @@ void poi_draw(PointOfInterest* poi, Color color)
 	{
 		return;
 	}
+	color.a = (Uint8)(color.a * ((double)poi->health / (double)POI_HEALTH));
 	draw_circle(poi->x, poi->y, poi->radius, color, false);
 	//draw_circle(poi->x, poi->y, poi->attractionRadius, color, false);
 }
@@ -59,7 +60,7 @@ vec2 poi_get_force(PointOfInterest* poi, Boid* boid, SimulationParameters* sim)
 	if (distanceSq < poi->attractionRadiusSq)
 	{
 		double force = (1.0 - distanceSq / poi->attractionRadiusSq) * sim->poiFactor;
-		return vec_mul(direction, force);
+		return vec_mul(vec_norm(direction), force);
 	}
 	return (vec2){0, 0};
 }

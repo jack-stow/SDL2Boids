@@ -1,6 +1,3 @@
-/*
- * Copyright (C) 2015-2018,2022 Parallel Realities. All rights reserved.
- */
 
 #include <SDL2/SDL_image.h>
 
@@ -14,6 +11,7 @@ void prepareScene(void)
 {
 	/*SDL_SetRenderDrawColor(app.renderer, 96, 128, 255, 255);*/
     SDL_SetRenderDrawColor(app.renderer, 0, 0, 0, 255);
+	SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
 	SDL_RenderClear(app.renderer);
 }
 
@@ -69,6 +67,7 @@ void blit(SDL_Texture* texture, int x, int y, double angle, double scale)
 void draw_circle(double x, double y, double radius, Color color, bool filled)
 {
     SDL_SetRenderDrawColor(app.renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
     int cx = (int)x;
     int cy = (int)y;
     int r = (int)radius;
