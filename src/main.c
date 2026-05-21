@@ -271,14 +271,7 @@ int main(int argc, char* argv[])
 
 		Uint64 updateStart = SDL_GetPerformanceCounter();
 
-		UpdateBoids(
-			boids,
-			boidCount,
-			sim,
-			pointsOfInterest,
-			poiCount,
-			deltaTimeReal
-		);
+		UpdateBoids(boids, boidCount, sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 

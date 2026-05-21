@@ -23,7 +23,6 @@ void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInt
         if (boids[i].y < 0) boids[i].y += SCREEN_HEIGHT;
         if (boids[i].y > SCREEN_HEIGHT) boids[i].y -= SCREEN_HEIGHT;
 
-        //drawBoid(&boids[i]);
     }
 }
 
@@ -139,8 +138,6 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 
     flockForce = vec_add(flockForce, vec_mul(wallForce, sim.borderingFactor));
 
-    //vec2 borderForce = AvoidBorders(boid, 100.0);
-    //real turnSpeed = (80.0) / sim.topSpeed;
 
     vec2 acceleration = vec_mul(flockForce, 1.0 / sim.turnSpeed);
 
