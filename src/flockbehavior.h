@@ -4,4 +4,5 @@ void Flock(Boid* boid, Boid *boids, int numBoids, SimulationParameters sim, Poin
 
 vec2 AvoidBorders(Boid* boid, double borderMargin);
 
-void HandleBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime);
+void DrawBoids(Boid* boids, int numBoids);
+void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime);

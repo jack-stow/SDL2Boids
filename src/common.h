@@ -1,6 +1,4 @@
-/*
- * Copyright (C) 2015-2018,2022 Parallel Realities. All rights reserved.
- */
+#pragma once
 #define SDL_MAIN_HANDLED
 #include "ctype.h"
 #include "defs.h"
@@ -13,6 +11,7 @@
 #include "structs.h"
 #include "vector2.h"
 #include "draw.h"
+#include <float.h>
 
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -23,3 +22,26 @@
 double angle_lerp(double a, double b, double t);
 double normalize_angle(double a);
 double rand_range_double(double min, double max);
+
+typedef struct
+{
+    double runTime;
+
+    double minFps;
+    double maxFps;
+    double fpsSum;
+    int fpsSamples;
+
+    double minUpdateMs;
+    double maxUpdateMs;
+    double updateMsSum;
+    int updateSamples;
+
+    double minDrawMs;
+    double maxDrawMs;
+    double drawMsSum;
+    int drawSamples;
+
+} Stats;
+
+extern Stats stats;

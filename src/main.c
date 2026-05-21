@@ -12,6 +12,7 @@
 
 App    app;
 Entity player;
+Stats stats;
 
 
 void displayFPS(double fps)
@@ -22,14 +23,39 @@ void displayFPS(double fps)
 	SDL_SetWindowTitle(app.window, title);
 }
 
+void printStats(void)
+{
+	printf("\n--- Simulation Stats ---\n");
+
+	printf("Runtime: %.2f sec\n", stats.runTime);
+
+	printf("FPS min/avg/max: %.2f / %.2f / %.2f\n",
+		stats.minFps,
+		stats.fpsSum / stats.fpsSamples,
+		stats.maxFps);
+
+	printf("Update ms min/avg/max: %.4f / %.4f / %.4f\n",
+		stats.minUpdateMs,
+		stats.updateMsSum / stats.updateSamples,
+		stats.maxUpdateMs);
+
+	printf("Draw ms min/avg/max: %.4f / %.4f / %.4f\n",
+		stats.minDrawMs,
+		stats.drawMsSum / stats.drawSamples,
+		stats.maxDrawMs);
+
+	cleanup();
+}
+
 int main(int argc, char* argv[])
 {
 	memset(&app, 0, sizeof(App));
 	memset(&player, 0, sizeof(Entity));
-	srand((unsigned int)time(NULL));
+	srand(RNG_SEED);
 	initSDL();
 
-	atexit(cleanup);
+	//atexit(cleanup);
+	atexit(printStats);
 	double posX = 100.0;
 	double posY = 100.0;
 
@@ -77,8 +103,9 @@ int main(int argc, char* argv[])
 	double fpsTimer = 0.0;
 	int frameCount = 0;
 
-	Uint64 flockStart = 0;
-	Uint64 flockEnd = 0;
+	Uint64 updateStart = 0;
+	Uint64 updateEnd = 0;
+	Uint64 drawEnd = 0;
 
 	double flockTimeAccum = 0.0;
 	int flockCallCount = 0;
@@ -86,80 +113,160 @@ int main(int argc, char* argv[])
 
 	Color poiColor = { 0, 255, 0, 255 };
 
+
+	// Statistics
+	stats.runTime = 0.0;
+
+	stats.minFps = DBL_MAX;
+	stats.maxFps = 0.0;
+	stats.fpsSum = 0.0;
+	stats.fpsSamples = 0;
+
+	stats.minUpdateMs = DBL_MAX;
+	stats.maxUpdateMs = 0.0;
+	stats.updateMsSum = 0.0;
+	stats.updateSamples = 0;
+
+	stats.minDrawMs = DBL_MAX;
+	stats.maxDrawMs = 0.0;
+	stats.drawMsSum = 0.0;
+	stats.drawSamples = 0;
+
+	double titleTimer = 0.0;
+	int titleFrameCount = 0;
+
+	double titleUpdateMsSum = 0.0;
+	double titleDrawMsSum = 0.0;
+	int titleSamples = 0;
+	/////////////////////////
+
 	while (1)
 	{
-		Uint64 currentCounter = SDL_GetPerformanceCounter();
+		Uint64 frameStart = SDL_GetPerformanceCounter();
 
 		double deltaTime =
-			(double)(currentCounter - lastCounter) /
+			(double)(frameStart - lastCounter) /
 			SDL_GetPerformanceFrequency();
 
-		lastCounter = currentCounter;
-		Uint64 frameStart = SDL_GetPerformanceCounter();
+		lastCounter = frameStart;
+
 		prepareScene();
 		doInput();
-		/*
 
-		updatePlayer(&player, (vec2) {
-			(double)(app.right - app.left),
-				(double)(app.down - app.up)
-		});
+		Uint64 updateStart = SDL_GetPerformanceCounter();
 
-		drawPlayer(&player);*/
+		UpdateBoids(
+			boids,
+			boidCount,
+			sim,
+			pointsOfInterest,
+			poiCount,
+			deltaTime
+		);
 
+		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
-		flockStart = SDL_GetPerformanceCounter();
-		HandleBoids(boids, boidCount, sim, pointsOfInterest, poiCount, deltaTime);
+		DrawBoids(boids, boidCount);
 
 		for (size_t i = 0; i < poiCount; i++)
 		{
-			if (!pointsOfInterest[i].active) {
+			if (!pointsOfInterest[i].active)
+			{
 				pointsOfInterest[i] = poi_reinitialize(&pointsOfInterest[i]);
 			}
 
 			poi_draw(&pointsOfInterest[i], poiColor);
 		}
 
-		flockEnd = SDL_GetPerformanceCounter();
-		draw_circle((int)boids[0].x, (int)boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
+		draw_circle(
+			(int)boids[0].x,
+			(int)boids[0].y,
+			sim.visionRadius,
+			(Color) {
+			255, 0, 255, 255
+		},
+			false
+		);
 
-		draw_circle((int)boids[0].x, (int)boids[0].y, sim.protectedRange, (Color) { 255, 0, 255, 255 }, false);
+		draw_circle(
+			(int)boids[0].x,
+			(int)boids[0].y,
+			sim.protectedRange,
+			(Color) {
+			255, 0, 255, 255
+		},
+			false
+		);
 
+		Uint64 drawEnd = SDL_GetPerformanceCounter();
 
+		double updateMs =
+			(double)(updateEnd - updateStart) /
+			SDL_GetPerformanceFrequency() * 1000.0;
 
-		double flockSeconds =
-			(double)(flockEnd - flockStart) / SDL_GetPerformanceFrequency();
+		double drawMs =
+			(double)(drawEnd - updateEnd) /
+			SDL_GetPerformanceFrequency() * 1000.0;
 
-		flockTimeAccum += flockSeconds;
-		flockCallCount++;
-		statsTimer += deltaTime;
-		frameCount++;
-		if (statsTimer >= 1.0)
+		if (deltaTime > 0.0)
 		{
-			double avgMs = (flockTimeAccum / flockCallCount) * 1000.0;
+			double fps = 1.0 / deltaTime;
 
+			if (fps < stats.minFps) stats.minFps = fps;
+			if (fps > stats.maxFps) stats.maxFps = fps;
+
+			stats.fpsSum += fps;
+			stats.fpsSamples++;
+		}
+
+		if (updateMs < stats.minUpdateMs) stats.minUpdateMs = updateMs;
+		if (updateMs > stats.maxUpdateMs) stats.maxUpdateMs = updateMs;
+		stats.updateMsSum += updateMs;
+		stats.updateSamples++;
+
+		if (drawMs < stats.minDrawMs) stats.minDrawMs = drawMs;
+		if (drawMs > stats.maxDrawMs) stats.maxDrawMs = drawMs;
+		stats.drawMsSum += drawMs;
+		stats.drawSamples++;
+
+		stats.runTime += deltaTime;
+
+		titleTimer += deltaTime;
+		titleFrameCount++;
+
+		titleUpdateMsSum += updateMs;
+		titleDrawMsSum += drawMs;
+		titleSamples++;
+
+		if (titleTimer >= 1.0)
+		{
 			char title[128];
-			snprintf(title, sizeof(title),
-				"FPS: %.1f | Flock avg: %.3f ms",
-				(double)frameCount / statsTimer,
-				avgMs
+
+			snprintf(
+				title,
+				sizeof(title),
+				"FPS: %.1f | Update: %.3f ms | Draw: %.3f ms",
+				(double)titleFrameCount / titleTimer,
+				titleUpdateMsSum / titleSamples,
+				titleDrawMsSum / titleSamples
 			);
 
 			SDL_SetWindowTitle(app.window, title);
 
-			flockTimeAccum = 0.0;
-			flockCallCount = 0;
-			statsTimer = 0.0;
-			frameCount = 0;
+			titleTimer = 0.0;
+			titleFrameCount = 0;
+			titleUpdateMsSum = 0.0;
+			titleDrawMsSum = 0.0;
+			titleSamples = 0;
 		}
-
 
 		presentScene();
 
 		Uint64 frameEnd = SDL_GetPerformanceCounter();
 
 		double frameSeconds =
-			(double)(frameEnd - frameStart) / SDL_GetPerformanceFrequency();
+			(double)(frameEnd - frameStart) /
+			SDL_GetPerformanceFrequency();
 
 		double targetFrameTime = 1.0 / 60.0;
 
@@ -167,9 +274,6 @@ int main(int argc, char* argv[])
 		{
 			SDL_Delay((Uint32)((targetFrameTime - frameSeconds) * 1000.0));
 		}
-
-		//SDL_Delay(16);
-		
 	}
 
 	return 0;

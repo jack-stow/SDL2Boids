@@ -1,9 +1,13 @@
 #include "flockbehavior.h"
 
-#include <float.h>
+void DrawBoids(Boid* boids, int numBoids) {
+	for (size_t i = 0; i < numBoids; i++)
+	{
+		drawBoid(&boids[i]);
+	}
+}
 
-
-void HandleBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime) {
+void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime) {
     
     for (size_t i = 0; i < numBoids; i++)
     {
@@ -19,7 +23,7 @@ void HandleBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInt
         if (boids[i].y < 0) boids[i].y += SCREEN_HEIGHT;
         if (boids[i].y > SCREEN_HEIGHT) boids[i].y -= SCREEN_HEIGHT;
 
-        drawBoid(&boids[i]);
+        //drawBoid(&boids[i]);
     }
 }
 
