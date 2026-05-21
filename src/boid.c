@@ -6,8 +6,8 @@ Boid boid_create(SimulationParameters sim, char* texture)
 {
     Boid boid;
 
-    boid.x = rand_range_real(50.0, SCREEN_WIDTH - 50.0);
-    boid.y = rand_range_real(50.0, SCREEN_HEIGHT - 50.0);
+    boid.x = rand_range_real(BORDER_MARGIN, SCREEN_WIDTH - BORDER_MARGIN);
+    boid.y = rand_range_real(BORDER_MARGIN, SCREEN_HEIGHT - BORDER_MARGIN);
 
     // Random direction
     vec2 dir = {rand_range_real(R(-1.0), R(1.0)), rand_range_real(R(-1.0), R(1.0))};
@@ -22,7 +22,7 @@ Boid boid_create(SimulationParameters sim, char* texture)
     boid.speed = vec_mul(dir, speed);
     boid.desiredSpeed = boid.speed;
 
-    boid.angle = REAL_ATAN2(boid.speed.y, boid.speed.x) * R(180.0) / REAL_PI;
+    boid.angle = REAL_ATAN2(boid.speed.y, boid.speed.x) * RAD_TO_DEG;
 
     boid.desiredAngle = boid.angle;
 

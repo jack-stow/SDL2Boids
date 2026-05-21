@@ -1,6 +1,4 @@
-/*
- * Copyright (C) 2015-2018,2022 Parallel Realities. All rights reserved.
- */
+
 #ifndef STRUCTS_H
 #define STRUCTS_H
 typedef struct {

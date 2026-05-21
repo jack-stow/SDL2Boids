@@ -9,7 +9,6 @@ extern App app;
 
 void prepareScene(void)
 {
-	/*SDL_SetRenderDrawColor(app.renderer, 96, 128, 255, 255);*/
     SDL_SetRenderDrawColor(app.renderer, 0, 0, 0, 255);
 	SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
 	SDL_RenderClear(app.renderer);

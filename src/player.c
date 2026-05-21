@@ -1,6 +1,7 @@
 
 #include "player.h"
 
+
 void initPlayer(Entity* player, real posX, real posY, real topSpeed, real acceleration, char* texture)
 {
     player->x = posX;
@@ -31,7 +32,7 @@ void updatePlayer(Entity* player, vec2 inputDirection)
 
     player->speed = vec_lerp(player->speed, desiredSpeed, player->acceleration);
 
-    if (vec_mag(player->speed) > 0.01)
+    if (vec_mag(player->speed) > R(0.01))
     {
         player->desiredAngle = REAL_ATAN2(player->speed.y, player->speed.x) * R(180.0) / REAL_PI;
     }
@@ -41,8 +42,8 @@ void updatePlayer(Entity* player, vec2 inputDirection)
     );
 	//player->angle = player->desiredAngle;
 
-    player->x = R(CLAMP(player->x + player->speed.x, 0, SCREEN_WIDTH - 48.0));
-    player->y = R(CLAMP(player->y + player->speed.y, 0, SCREEN_HEIGHT - 48.0));
+    player->x = R(CLAMP(player->x + player->speed.x, 0, SCREEN_WIDTH - BORDER_MARGIN));
+    player->y = R(CLAMP(player->y + player->speed.y, 0, SCREEN_HEIGHT - BORDER_MARGIN));
 }
 
 void drawPlayer(Entity* player)

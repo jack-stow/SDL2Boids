@@ -106,7 +106,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
     flockForce = vec_add(flockForce, vec_mul(align, sim.matchingFactor));
     flockForce = vec_add(flockForce, vec_mul(cohere, sim.centeringFactor));
 
-    vec2 wallForce = AvoidBorders(boid, 100.0);
+    vec2 wallForce = AvoidBorders(boid, BORDER_MARGIN);
 	vec2 poiForce = { 0, 0 };
 
     PointOfInterest* closestPOI = NULL;

@@ -2,8 +2,13 @@
 #define SCREEN_WIDTH  1600
 #define SCREEN_HEIGHT 900
 
+
+#define BORDER_MARGIN 48.0
+
 #define FRAME_RATE 60.0
 #define BENCHMARK_FRAMES 3600
 #define WARMUP_FRAMES 60
 
 #define RNG_SEED 12345
+
+#define TITLE_SIZE 128

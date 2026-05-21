@@ -72,6 +72,9 @@
     <ClInclude Include="src\types.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\constants.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

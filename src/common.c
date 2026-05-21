@@ -2,11 +2,14 @@
 
 real normalize_angle(real a)
 {
-    while (a > 180.0) a -= 360.0;
-    while (a < -180.0) a += 360.0;
+    while (a > HALF_CIRCLE_DEGREES)
+        a -= FULL_CIRCLE_DEGREES;
+
+    while (a < -HALF_CIRCLE_DEGREES)
+        a += FULL_CIRCLE_DEGREES;
+
     return a;
 }
-
 real angle_lerp(real a, real b, real t)
 {
     real diff = normalize_angle(b - a);

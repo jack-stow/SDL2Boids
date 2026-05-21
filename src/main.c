@@ -17,7 +17,7 @@ Stats stats;
 
 void displayFPS(double fps)
 {
-	char title[128];
+	char title[TITLE_SIZE];
 	snprintf(title, sizeof(title), "FPS: %.2f", fps);
 
 	SDL_SetWindowTitle(app.window, title);
@@ -136,7 +136,7 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 
 		if (titleTimer >= 1.0)
 		{
-			char title[128];
+			char title[TITLE_SIZE];
 
 			snprintf(
 				title,
@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
 
 	for (size_t i = 0; i < boidCount; i++)
 	{
-		boids[i] = boid_create(sim, "gfx/boid.png");
+		boids[i] = boid_create(sim, BOID_TEXTURE);
 	}
 
 	int poiCount = NUM_POI;
@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
 
 
 
-	initPlayer(&player, posX, posY, sim.topSpeed, sim.acceleration, "gfx/boid.png");
+	initPlayer(&player, posX, posY, sim.topSpeed, sim.acceleration, BOID_TEXTURE);
 	Uint64 lastCounter = SDL_GetPerformanceCounter();
 
 	double fpsTimer = 0.0;

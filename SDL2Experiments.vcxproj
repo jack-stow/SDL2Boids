@@ -33,6 +33,7 @@
   <ItemGroup>
     <ClInclude Include="src\boid.h" />
     <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\constants.h" />
     <ClInclude Include="src\defs.h" />
     <ClInclude Include="src\draw.h" />
     <ClInclude Include="src\flockbehavior.h" />
