@@ -21,6 +21,6 @@ int rand_range(int min, int max)
 
 real rand_range_real(real min, real max)
 {
-    real t = (real)rand() / (real)RAND_MAX;
+    real t = R(rand()) / R(RAND_MAX);
     return min + t * (max - min);
 }

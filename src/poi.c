@@ -59,7 +59,7 @@ vec2 poi_get_force(PointOfInterest* poi, Boid* boid, SimulationParameters* sim)
 	real distanceSq = vec_mag_sq(direction);
 	if (distanceSq < poi->attractionRadiusSq)
 	{
-		real force = (1.0 - distanceSq / poi->attractionRadiusSq) * sim->poiFactor;
+		real force = (R(1.0) - distanceSq / poi->attractionRadiusSq) * R(sim->poiFactor);
 		return vec_mul(vec_norm(direction), force);
 	}
 	return (vec2){0, 0};

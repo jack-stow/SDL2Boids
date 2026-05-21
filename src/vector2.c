@@ -32,7 +32,7 @@ vec2 vec_mul(vec2 v, real d)
 
 real vec_mag(vec2 v)
 {
-    return sqrt(v.x * v.x + v.y * v.y);
+    return REAL_SQRT(v.x * v.x + v.y * v.y);
 }
 
 real vec_mag_sq(vec2 v)
@@ -56,7 +56,7 @@ vec2 vec_norm(vec2 v)
         return v;
     }
 
-    return vec_mul(v, 1.0 / mag);
+    return vec_mul(v, R(1.0) / mag);
 }
 
 real vec_dot(vec2 v1, vec2 v2)
@@ -101,7 +101,7 @@ real vec_angle(vec2 v1, vec2 v2)
         cosine = -1.0;
     }
 
-    return acos(cosine);
+    return REAL_ACOS(cosine);
 }
 
 vec2 vec_lerp(vec2 a, vec2 b, real t)

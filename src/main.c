@@ -170,33 +170,39 @@ int main(int argc, char* argv[])
 
 	//atexit(cleanup);
 	atexit(printStats);
-	double posX = 100.0;
-	double posY = 100.0;
+	real posX = 100.0;
+	real posY = 100.0;
 
 
 	SimulationParameters sim = {
-		.topSpeed = TOP_SPEED,
-		.minSpeed = MIN_SPEED,
-		.turnSpeed = TURN_SPEED,
-		.acceleration = ACCELERATION,
+		.topSpeed = R(TOP_SPEED),
+		.minSpeed = R(MIN_SPEED),
+		.turnSpeed = R(TURN_SPEED),
+		.acceleration = R(ACCELERATION),
 
-		.avoidFactor = AVOID_FACTOR,
-		.matchingFactor = MATCHING_FACTOR,
-		.centeringFactor = CENTERING_FACTOR,
-		.borderingFactor = BORDERING_FACTOR,
+		.avoidFactor = R(AVOID_FACTOR),
+		.matchingFactor = R(MATCHING_FACTOR),
+		.centeringFactor = R(CENTERING_FACTOR),
+		.borderingFactor = R(BORDERING_FACTOR),
 
 		.maxVisible = MAX_VISIBLE,
-		.visionRadius = VISION_RADIUS,
-		.visionRadiusSq = VISION_RADIUS * VISION_RADIUS,
-		.protectedRange = PROTECTED_RANGE,
-		.protectedRangeSq = PROTECTED_RANGE * PROTECTED_RANGE,
+		.visionRadius = R(VISION_RADIUS),
+		.visionRadiusSq = R(VISION_RADIUS) * R(VISION_RADIUS),
+		.protectedRange = R(PROTECTED_RANGE),
+		.protectedRangeSq = R(PROTECTED_RANGE) * R(PROTECTED_RANGE),
 
-		.poiFactor = POI_FACTOR
+		.poiFactor = R(POI_FACTOR)
 	};
 
 	int boidCount = BOID_COUNT;
 
 	Boid* boids = malloc(sizeof(Boid) * boidCount);
+
+	if (boids == NULL)
+	{
+		SDL_Log("Failed to allocate boids");
+		exit(1);
+	}
 
 	for (size_t i = 0; i < boidCount; i++)
 	{
@@ -206,10 +212,17 @@ int main(int argc, char* argv[])
 	int poiCount = NUM_POI;
 	PointOfInterest* pointsOfInterest = malloc(sizeof(PointOfInterest) * poiCount);
 
+	if (pointsOfInterest == NULL)
+	{
+		SDL_Log("Failed to allocate points of interest");
+		exit(1);
+	}
 	for (size_t i = 0; i < poiCount; i++)
 	{
 		pointsOfInterest[i] = poi_create_random();
 	}
+
+
 
 	initPlayer(&player, posX, posY, sim.topSpeed, sim.acceleration, "gfx/boid.png");
 	Uint64 lastCounter = SDL_GetPerformanceCounter();
@@ -287,9 +300,9 @@ int main(int argc, char* argv[])
 			//poipoi_draw(&pointsOfInterest[i], poiColor);
 		}
 
-		draw_circle((int)boids[0].x, (int)boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
+		draw_circle(boids[0].x, boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
 
-		draw_circle((int)boids[0].x, (int)boids[0].y, sim.protectedRange, (Color) {255, 0, 255, 255}, false);
+		draw_circle(boids[0].x, boids[0].y, sim.protectedRange, (Color) {255, 0, 255, 255}, false);
 
 		Uint64 drawEnd = SDL_GetPerformanceCounter();
 

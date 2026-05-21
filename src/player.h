@@ -2,17 +2,17 @@
 
 typedef struct
 {
-	double          x;
-	double          y;
+	real          x;
+	real          y;
 
 	vec2 speed;
 	vec2 desiredSpeed;
 
-	double angle;
-	double desiredAngle;
+	real angle;
+	real desiredAngle;
 
-	double topSpeed;
-	double acceleration;
+	real topSpeed;
+	real acceleration;
 
 
 	SDL_Texture* texture;
@@ -20,6 +20,6 @@ typedef struct
 
 
 
-void initPlayer(Entity* player, double posX, double posY, double topSpeed, double acceleration, char* texture);
+void initPlayer(Entity* player, real posX, real posY, real topSpeed, real acceleration, char* texture);
 void updatePlayer(Entity* player, vec2 inputDirection);
 void drawPlayer(Entity* player);

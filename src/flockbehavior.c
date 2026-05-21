@@ -65,7 +65,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
             vec2 away = vec_sub(boidPos, otherPos);
 
             // Stronger avoidance when very close
-            away = vec_mul(away, 1.0 / distanceSq);
+            away = vec_mul(away, ((real)1.0) / distanceSq);
 
             avoid = vec_add(avoid, away);
             avoidCount++;
@@ -82,20 +82,20 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 
     if (avoidCount > 0)
     {
-        avoid = vec_mul(avoid, 1.0 / avoidCount);
+        avoid = vec_mul(avoid, R(1.0) / R(avoidCount));
         avoid = vec_norm(avoid);
     }
 
     if (alignCount > 0)
     {
-        align = vec_mul(align, 1.0 / alignCount);
+        align = vec_mul(align, R(1.0) / R(alignCount));
         align = vec_sub(align, boid->speed);
         align = vec_norm(align);
     }
 
     if (cohesionCount > 0)
     {
-        cohere = vec_mul(cohere, 1.0 / cohesionCount);
+        cohere = vec_mul(cohere, R(1.0) / R(cohesionCount));
         cohere = vec_sub(cohere, boidPos);
         cohere = vec_norm(cohere);
     }
@@ -139,19 +139,19 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
     flockForce = vec_add(flockForce, vec_mul(wallForce, sim.borderingFactor));
 
 
-    vec2 acceleration = vec_mul(flockForce, 1.0 / sim.turnSpeed);
+    vec2 acceleration = vec_mul(flockForce, R(1.0) / R(sim.turnSpeed));
 
     boid->speed = vec_add(boid->speed, vec_mul(acceleration, deltaTime));
 
     boid->speed = vec_clamp_mag(
         boid->speed,
-        sim.minSpeed,
-        sim.topSpeed
+        R(sim.minSpeed),
+        R(sim.topSpeed)
     );
 
     if (vec_mag(boid->speed) > 0.01)
     {
-        boid->desiredAngle = atan2(boid->speed.y, boid->speed.x) * 180.0 / M_PI;
+        boid->desiredAngle = REAL_ATAN2(boid->speed.y, boid->speed.x) * R(180.0) / REAL_PI;
     }
 
 

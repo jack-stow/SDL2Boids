@@ -51,7 +51,7 @@ void blit(SDL_Texture* texture, real x, real y, real angle, real scale)
 }
 
 
-//void draw_rect(double x, double y, double radius)
+//void draw_rect(real x, real y, real radius)
 //{
 //	SDL_Rect rect;
 //

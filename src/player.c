@@ -1,7 +1,7 @@
 
 #include "player.h"
 
-void initPlayer(Entity* player, double posX, double posY, double topSpeed, double acceleration, char* texture)
+void initPlayer(Entity* player, real posX, real posY, real topSpeed, real acceleration, char* texture)
 {
     player->x = posX;
     player->y = posY;
@@ -24,8 +24,8 @@ void updatePlayer(Entity* player, vec2 inputDirection)
 {
     vec2 desiredSpeed = { 0, 0 };
 
-    desiredSpeed.x = (double)(inputDirection.x);
-    desiredSpeed.y = (double)(inputDirection.y);
+    desiredSpeed.x = R(inputDirection.x);
+    desiredSpeed.y = R(inputDirection.y);
 
     desiredSpeed = vec_mul(vec_norm(desiredSpeed), player->topSpeed);
 
@@ -33,7 +33,7 @@ void updatePlayer(Entity* player, vec2 inputDirection)
 
     if (vec_mag(player->speed) > 0.01)
     {
-        player->desiredAngle = atan2(player->speed.y, player->speed.x) * 180.0 / M_PI;
+        player->desiredAngle = REAL_ATAN2(player->speed.y, player->speed.x) * R(180.0) / REAL_PI;
     }
 
     player->angle = normalize_angle(
@@ -41,8 +41,8 @@ void updatePlayer(Entity* player, vec2 inputDirection)
     );
 	//player->angle = player->desiredAngle;
 
-    player->x = CLAMP(player->x + player->speed.x, 0, SCREEN_WIDTH - 48.0);
-    player->y = CLAMP(player->y + player->speed.y, 0, SCREEN_HEIGHT - 48.0);
+    player->x = R(CLAMP(player->x + player->speed.x, 0, SCREEN_WIDTH - 48.0));
+    player->y = R(CLAMP(player->y + player->speed.y, 0, SCREEN_HEIGHT - 48.0));
 }
 
 void drawPlayer(Entity* player)
