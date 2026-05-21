@@ -69,6 +69,98 @@ void printStats(void)
 	cleanup();
 }
 
+void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 drawEnd, Uint64 frameStart, Uint64 frameEnd, Uint64 performanceFreq) {
+
+	static double titleTimer = 0.0;
+	static int titleFrameCount = 0;
+	static double titleUpdateMsSum = 0.0;
+	static double titleDrawMsSum = 0.0;
+	static int titleSamples = 0;
+
+	double updateMs =
+		(double)(updateEnd - updateStart) / performanceFreq * 1000.0;
+
+	double drawMs =
+		(double)(drawEnd - updateEnd) / performanceFreq * 1000.0;
+
+	double presentMs =
+		(double)(frameEnd - drawEnd) / performanceFreq * 1000.0;
+
+	double frameWorkMs =
+		(double)(frameEnd - frameStart) / performanceFreq * 1000.0;
+
+
+	stats.runTime += deltaTime;
+
+	if (stats.totalFrames > WARMUP_FRAMES) {
+
+		if (deltaTime > 0.0)
+		{
+			double fps = 1.0 / deltaTime;
+
+			if (fps < stats.minFps) stats.minFps = fps;
+			if (fps > stats.maxFps) stats.maxFps = fps;
+
+			stats.fpsSum += fps;
+			stats.fpsSamples++;
+		}
+
+		if (updateMs < stats.minUpdateMs) stats.minUpdateMs = updateMs;
+		if (updateMs > stats.maxUpdateMs) stats.maxUpdateMs = updateMs;
+		stats.updateMsSum += updateMs;
+		stats.updateSamples++;
+
+		if (drawMs < stats.minDrawMs) stats.minDrawMs = drawMs;
+		if (drawMs > stats.maxDrawMs) stats.maxDrawMs = drawMs;
+		stats.drawMsSum += drawMs;
+		stats.drawSamples++;
+
+		titleTimer += deltaTime;
+		titleFrameCount++;
+
+		titleUpdateMsSum += updateMs;
+		titleDrawMsSum += drawMs;
+		titleSamples++;
+
+		if (frameWorkMs < stats.minFrameWorkMs)
+			stats.minFrameWorkMs = frameWorkMs;
+
+		if (frameWorkMs > stats.maxFrameWorkMs)
+			stats.maxFrameWorkMs = frameWorkMs;
+
+		stats.frameWorkMsSum += frameWorkMs;
+		stats.frameWorkSamples++;
+
+		int framesRemaining = BENCHMARK_FRAMES - stats.totalFrames;
+		double secondsRemaining = framesRemaining / 60.0;
+
+		if (titleTimer >= 1.0)
+		{
+			char title[128];
+
+			snprintf(
+				title,
+				sizeof(title),
+				"FPS: %.1f | Update: %.3f ms | Draw: %.3f ms | Work: %.3f ms | ETA: %.1fs",
+				(double)titleFrameCount / titleTimer,
+				titleUpdateMsSum / titleSamples,
+				titleDrawMsSum / titleSamples,
+				stats.frameWorkMsSum / stats.frameWorkSamples,
+				secondsRemaining
+			);
+
+			SDL_SetWindowTitle(app.window, title);
+
+			titleTimer = 0.0;
+			titleFrameCount = 0;
+			titleUpdateMsSum = 0.0;
+			titleDrawMsSum = 0.0;
+			titleSamples = 0;
+		}
+	}
+
+}
+
 int main(int argc, char* argv[])
 {
 	memset(&app, 0, sizeof(App));
@@ -160,15 +252,6 @@ int main(int argc, char* argv[])
 	stats.frameWorkMsSum = 0.0;
 	stats.frameWorkSamples = 0;
 
-	double titleTimer = 0.0;
-	int titleFrameCount = 0;
-
-	double titleUpdateMsSum = 0.0;
-	double titleDrawMsSum = 0.0;
-	int titleSamples = 0;
-
-
-
 	/////////////////////////
 
 	while (1)
@@ -211,25 +294,9 @@ int main(int argc, char* argv[])
 			//poipoi_draw(&pointsOfInterest[i], poiColor);
 		}
 
-		draw_circle(
-			(int)boids[0].x,
-			(int)boids[0].y,
-			sim.visionRadius,
-			(Color) {
-			255, 0, 255, 255
-		},
-			false
-		);
+		draw_circle((int)boids[0].x, (int)boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
 
-		draw_circle(
-			(int)boids[0].x,
-			(int)boids[0].y,
-			sim.protectedRange,
-			(Color) {
-			255, 0, 255, 255
-		},
-			false
-		);
+		draw_circle((int)boids[0].x, (int)boids[0].y, sim.protectedRange, (Color) {255, 0, 255, 255}, false);
 
 		Uint64 drawEnd = SDL_GetPerformanceCounter();
 
@@ -239,94 +306,12 @@ int main(int argc, char* argv[])
 
 		Uint64 performanceFreq = SDL_GetPerformanceFrequency();
 
-		double updateMs =
-			(double)(updateEnd - updateStart) / performanceFreq * 1000.0;
 
-		double drawMs =
-			(double)(drawEnd - updateEnd) / performanceFreq * 1000.0;
+		UpdateStats(deltaTime, updateStart, updateEnd, drawEnd, frameStart, frameEnd, performanceFreq);
 
-		double presentMs =
-			(double)(frameEnd - drawEnd) / performanceFreq * 1000.0;
-
-		double frameWorkMs =
-			(double)(frameEnd - frameStart) / performanceFreq * 1000.0;
 
 		double frameSeconds =
 			(double)(frameEnd - frameStart) / performanceFreq;
-
-		stats.runTime += deltaTime;
-
-		if (stats.totalFrames > WARMUP_FRAMES) {
-
-			if (deltaTime > 0.0)
-			{
-				double fps = 1.0 / deltaTime;
-
-				if (fps < stats.minFps) stats.minFps = fps;
-				if (fps > stats.maxFps) stats.maxFps = fps;
-
-				stats.fpsSum += fps;
-				stats.fpsSamples++;
-			}
-
-			if (updateMs < stats.minUpdateMs) stats.minUpdateMs = updateMs;
-			if (updateMs > stats.maxUpdateMs) stats.maxUpdateMs = updateMs;
-			stats.updateMsSum += updateMs;
-			stats.updateSamples++;
-
-			if (drawMs < stats.minDrawMs) stats.minDrawMs = drawMs;
-			if (drawMs > stats.maxDrawMs) stats.maxDrawMs = drawMs;
-			stats.drawMsSum += drawMs;
-			stats.drawSamples++;
-
-			titleTimer += deltaTime;
-			titleFrameCount++;
-
-			titleUpdateMsSum += updateMs;
-			titleDrawMsSum += drawMs;
-			titleSamples++;
-
-			if (frameWorkMs < stats.minFrameWorkMs)
-				stats.minFrameWorkMs = frameWorkMs;
-
-			if (frameWorkMs > stats.maxFrameWorkMs)
-				stats.maxFrameWorkMs = frameWorkMs;
-
-			stats.frameWorkMsSum += frameWorkMs;
-			stats.frameWorkSamples++;
-
-			int framesRemaining = BENCHMARK_FRAMES - stats.totalFrames;
-			double secondsRemaining = framesRemaining / 60.0;
-
-			if (titleTimer >= 1.0)
-			{
-				char title[128];
-
-				snprintf(
-					title,
-					sizeof(title),
-					"FPS: %.1f | Update: %.3f ms | Draw: %.3f ms | Work: %.3f ms | ETA: %.1fs",
-					(double)titleFrameCount / titleTimer,
-					titleUpdateMsSum / titleSamples,
-					titleDrawMsSum / titleSamples,
-					stats.frameWorkMsSum / stats.frameWorkSamples,
-					secondsRemaining
-				);
-
-				SDL_SetWindowTitle(app.window, title);
-
-				titleTimer = 0.0;
-				titleFrameCount = 0;
-				titleUpdateMsSum = 0.0;
-				titleDrawMsSum = 0.0;
-				titleSamples = 0;
-			}
-		}
-
-		
-
-
-
 
 		double targetFrameTime = 1.0 / 60.0;
 
