@@ -5,13 +5,11 @@
 #include "init.h"
 #include "input.h"
 #include "main.h"
-#include "player.h"
 #include "boid.h"
 #include "flockbehavior.h"
 #include "poi.h"
 
 App    app;
-Entity player;
 Stats stats;
 
 
@@ -78,16 +76,16 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 	static int titleSamples = 0;
 
 	double updateMs =
-		(double)(updateEnd - updateStart) / performanceFreq * 1000.0;
+		(double)(updateEnd - updateStart) / performanceFreq * MS_PER_SECOND;
 
 	double drawMs =
-		(double)(drawEnd - updateEnd) / performanceFreq * 1000.0;
+		(double)(drawEnd - updateEnd) / performanceFreq * MS_PER_SECOND;
 
 	double presentMs =
-		(double)(frameEnd - drawEnd) / performanceFreq * 1000.0;
+		(double)(frameEnd - drawEnd) / performanceFreq * MS_PER_SECOND;
 
 	double frameWorkMs =
-		(double)(frameEnd - frameStart) / performanceFreq * 1000.0;
+		(double)(frameEnd - frameStart) / performanceFreq * MS_PER_SECOND;
 
 
 	stats.runTime += deltaTime;
@@ -132,7 +130,7 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 		stats.frameWorkSamples++;
 
 		int framesRemaining = BENCHMARK_FRAMES - stats.totalFrames;
-		double secondsRemaining = framesRemaining / 60.0;
+		double secondsRemaining = framesRemaining / FRAME_RATE;
 
 		if (titleTimer >= 1.0)
 		{
@@ -164,7 +162,6 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 int main(int argc, char* argv[])
 {
 	memset(&app, 0, sizeof(App));
-	memset(&player, 0, sizeof(Entity));
 	srand(RNG_SEED);
 	initSDL();
 
@@ -222,9 +219,6 @@ int main(int argc, char* argv[])
 		pointsOfInterest[i] = poi_create_random();
 	}
 
-
-
-	initPlayer(&player, posX, posY, sim.topSpeed, sim.acceleration, BOID_TEXTURE);
 	Uint64 lastCounter = SDL_GetPerformanceCounter();
 
 	double fpsTimer = 0.0;
@@ -330,7 +324,7 @@ int main(int argc, char* argv[])
 
 		if (frameSeconds < targetFrameTime)
 		{
-			SDL_Delay((Uint32)((targetFrameTime - frameSeconds) * 1000.0));
+			SDL_Delay((Uint32)((targetFrameTime - frameSeconds) * MS_PER_SECOND));
 		}
 	}
 

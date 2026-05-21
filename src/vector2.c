@@ -1,6 +1,3 @@
-/* Quackmatic 2014
- * https://github.com/Quackmatic
- */
 
 #include <math.h>
 #include "vector2.h"

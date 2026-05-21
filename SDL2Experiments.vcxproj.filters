@@ -16,9 +16,6 @@
     <ClCompile Include="src\main.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\player.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\vector2.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -49,9 +46,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\main.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\player.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\structs.h">

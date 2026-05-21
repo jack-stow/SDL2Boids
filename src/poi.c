@@ -4,8 +4,8 @@
 PointOfInterest poi_create_random(void)
 {
 	PointOfInterest poi;
-	poi.x = rand_range_real(50.0, SCREEN_WIDTH - 50.0);
-	poi.y = rand_range_real(50.0, SCREEN_HEIGHT - 50.0);
+	poi.x = rand_range_real(BORDER_MARGIN, SCREEN_WIDTH - BORDER_MARGIN);
+	poi.y = rand_range_real(BORDER_MARGIN, SCREEN_HEIGHT - BORDER_MARGIN);
 	poi.attractionRadius = POI_ATTRACTION_RADIUS;
 	poi.attractionRadiusSq = POI_ATTRACTION_RADIUS * POI_ATTRACTION_RADIUS;
 	poi.radius = POI_CONSUME_RADIUS;
@@ -17,8 +17,8 @@ PointOfInterest poi_create_random(void)
 
 PointOfInterest poi_reinitialize(PointOfInterest* poi)
 {
-	poi->x = rand_range_real(50.0, SCREEN_WIDTH - 50.0);
-	poi->y = rand_range_real(50.0, SCREEN_HEIGHT - 50.0);
+	poi->x = rand_range_real(BORDER_MARGIN, SCREEN_WIDTH - BORDER_MARGIN);
+	poi->y = rand_range_real(BORDER_MARGIN, SCREEN_HEIGHT - BORDER_MARGIN);
 	poi->attractionRadius = POI_ATTRACTION_RADIUS;
 	poi->attractionRadiusSq = POI_ATTRACTION_RADIUS * POI_ATTRACTION_RADIUS;
 	poi->radius = POI_CONSUME_RADIUS;
