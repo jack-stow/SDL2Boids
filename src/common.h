@@ -42,6 +42,13 @@ typedef struct
     double drawMsSum;
     int drawSamples;
 
+    int totalFrames;
+
+    double minFrameWorkMs;
+    double maxFrameWorkMs;
+    double frameWorkMsSum;
+    int frameWorkSamples;
+
 } Stats;
 
 extern Stats stats;

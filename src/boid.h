@@ -4,7 +4,6 @@
 #define BOID_H
 
 #define BOID_SCALE 0.1
-#define FRAME_RATE 60.0
 
 #define TOP_SPEED        (5.0 * FRAME_RATE)
 #define MIN_SPEED        (TOP_SPEED * 0.4)
