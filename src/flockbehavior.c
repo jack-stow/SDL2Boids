@@ -7,7 +7,7 @@ void DrawBoids(Boid* boids, int numBoids) {
 	}
 }
 
-void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime) {
+void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
     
     for (size_t i = 0; i < numBoids; i++)
     {
@@ -27,7 +27,7 @@ void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInt
     }
 }
 
-void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, double deltaTime) {
+void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
     vec2 avoid = { 0, 0 };
     vec2 align = { 0, 0 };
     vec2 cohere = { 0, 0 };
@@ -54,7 +54,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 
         vec2 otherPos = { other->x, other->y };
 
-		double distanceSq = vec_dist_sq(boidPos, otherPos);
+		real distanceSq = vec_dist_sq(boidPos, otherPos);
         if (distanceSq <= 0.0 || distanceSq >= sim.visionRadiusSq)
         {
             continue;
@@ -111,7 +111,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 	vec2 poiForce = { 0, 0 };
 
     PointOfInterest* closestPOI = NULL;
-    double closestDistSq = DBL_MAX;
+    real closestDistSq = REAL_MAX;
 
     for (int i = 0; i < poiCount; i++)
     {
@@ -121,7 +121,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
         }
 
         vec2 offset = poi_get_direction_vector(&pointsOfInterest[i], boid);
-        double distSq = vec_mag_sq(offset);
+        real distSq = vec_mag_sq(offset);
 
         if (distSq < closestDistSq)
         {
@@ -140,7 +140,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
     flockForce = vec_add(flockForce, vec_mul(wallForce, sim.borderingFactor));
 
     //vec2 borderForce = AvoidBorders(boid, 100.0);
-    //double turnSpeed = (80.0) / sim.topSpeed;
+    //real turnSpeed = (80.0) / sim.topSpeed;
 
     vec2 acceleration = vec_mul(flockForce, 1.0 / sim.turnSpeed);
 
@@ -164,29 +164,29 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 }
 
 
-vec2 AvoidBorders(Boid* boid, double borderMargin)
+vec2 AvoidBorders(Boid* boid, real borderMargin)
 {
     vec2 force = { 0, 0 };
 
     if (boid->x < borderMargin)
     {
-        double t = (borderMargin - boid->x) / borderMargin;
+        real t = (borderMargin - boid->x) / borderMargin;
         force.x += t * t;
     }
     else if (boid->x > SCREEN_WIDTH - borderMargin)
     {
-        double t = (boid->x - (SCREEN_WIDTH - borderMargin)) / borderMargin;
+        real t = (boid->x - (SCREEN_WIDTH - borderMargin)) / borderMargin;
         force.x -= t * t;
     }
 
     if (boid->y < borderMargin)
     {
-        double t = (borderMargin - boid->y) / borderMargin;
+        real t = (borderMargin - boid->y) / borderMargin;
         force.y += t * t;
     }
     else if (boid->y > SCREEN_HEIGHT - borderMargin)
     {
-        double t = (boid->y - (SCREEN_HEIGHT - borderMargin)) / borderMargin;
+        real t = (boid->y - (SCREEN_HEIGHT - borderMargin)) / borderMargin;
         force.y -= t * t;
     }
 

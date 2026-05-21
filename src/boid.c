@@ -6,19 +6,19 @@ Boid boid_create(SimulationParameters sim, char* texture)
 {
     Boid boid;
 
-    boid.x = rand_range_double(50.0, SCREEN_WIDTH - 50.0);
-    boid.y = rand_range_double(50.0, SCREEN_HEIGHT - 50.0);
+    boid.x = rand_range_real(50.0, SCREEN_WIDTH - 50.0);
+    boid.y = rand_range_real(50.0, SCREEN_HEIGHT - 50.0);
 
     // Random direction
     vec2 dir = {
-        ((double)rand() / RAND_MAX) * 2.0 - 1.0,
-        ((double)rand() / RAND_MAX) * 2.0 - 1.0
+        ((real)rand() / (real)RAND_MAX) * 2.0 - 1.0,
+        ((real)rand() / (real)RAND_MAX) * 2.0 - 1.0
     };
 
     dir = vec_norm(dir);
 
     // Random speed magnitude
-    double speed = ((double)rand() / RAND_MAX) * sim.topSpeed;
+    real speed = ((real)rand() / (real)RAND_MAX) * sim.topSpeed;
 
 	speed = CLAMP(speed, sim.minSpeed, sim.topSpeed);
 

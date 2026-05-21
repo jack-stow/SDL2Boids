@@ -10,12 +10,12 @@
 
 typedef struct
 {
-    double x;
-    double y;
-    double attractionRadius;
-    double attractionRadiusSq;
-    double radius;
-    double radiusSq;
+    real x;
+    real y;
+    real attractionRadius;
+    real attractionRadiusSq;
+    real radius;
+    real radiusSq;
     bool active;
     int health;
 } PointOfInterest;

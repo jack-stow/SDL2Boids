@@ -33,6 +33,8 @@ void printStats(void)
 		printf("Build: Release\n");
 	#endif
 
+	printf("Real type: %s\n", REAL_TYPE_NAME);
+
 	printf("Boids: %d\n", BOID_COUNT);
 	printf("POIs: %d\n", NUM_POI);
 	printf("Seed: %d\n", RNG_SEED);
@@ -177,6 +179,8 @@ int main(int argc, char* argv[])
 			(double)(frameStart - lastCounter) /
 			SDL_GetPerformanceFrequency();
 
+		real deltaTimeReal = (real)deltaTime;
+
 		lastCounter = frameStart;
 
 		prepareScene();
@@ -190,7 +194,7 @@ int main(int argc, char* argv[])
 			sim,
 			pointsOfInterest,
 			poiCount,
-			deltaTime
+			deltaTimeReal
 		);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();

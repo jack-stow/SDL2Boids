@@ -1,15 +1,15 @@
 #include "common.h"
 
-double normalize_angle(double a)
+real normalize_angle(real a)
 {
     while (a > 180.0) a -= 360.0;
     while (a < -180.0) a += 360.0;
     return a;
 }
 
-double angle_lerp(double a, double b, double t)
+real angle_lerp(real a, real b, real t)
 {
-    double diff = normalize_angle(b - a);
+    real diff = normalize_angle(b - a);
     return a + diff * t;
 }
 
@@ -19,8 +19,8 @@ int rand_range(int min, int max)
     return min + rand() % (max - min + 1);
 }
 
-double rand_range_double(double min, double max)
+real rand_range_real(real min, real max)
 {
-    double t = (double)rand() / (double)RAND_MAX;
+    real t = (real)rand() / (real)RAND_MAX;
     return min + t * (max - min);
 }

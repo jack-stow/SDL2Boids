@@ -33,7 +33,7 @@ SDL_Texture* loadTexture(char* filename)
 
 
 
-void blit(SDL_Texture* texture, int x, int y, double angle, double scale)
+void blit(SDL_Texture* texture, real x, real y, real angle, real scale)
 {
 	SDL_Rect dest;
 	int w, h;
@@ -64,7 +64,7 @@ void blit(SDL_Texture* texture, int x, int y, double angle, double scale)
 //	SDL_RenderFillRect(app.renderer, &rect);
 //}
 
-void draw_circle(double x, double y, double radius, Color color, bool filled)
+void draw_circle(real x, real y, real radius, Color color, bool filled)
 {
     SDL_SetRenderDrawColor(app.renderer, color.r, color.g, color.b, color.a);
     SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);

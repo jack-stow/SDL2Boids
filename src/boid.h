@@ -16,26 +16,26 @@
 #define BORDERING_FACTOR (5.0 * FRAME_RATE)
 #define POI_FACTOR       (10.0)
 
+#define BOID_COUNT 	  2000
 
-#define MAX_VISIBLE        10.0
+#define MAX_VISIBLE        10
 #define VISION_RADIUS      70.0
 #define PROTECTED_RANGE    5.0
 
 
-#define BOID_COUNT 	  500
 
 
 
 typedef struct
 {
-	double          x;
-	double          y;
+	real          x;
+	real          y;
 
 	vec2 speed;
 	vec2 desiredSpeed;
 
-	double angle;
-	double desiredAngle;
+	real angle;
+	real desiredAngle;
 
 
 	SDL_Texture* texture;
@@ -43,22 +43,22 @@ typedef struct
 
 typedef struct
 {
-	double topSpeed;
-	double minSpeed;
-	double turnSpeed;
-	double acceleration;
+	real topSpeed;
+	real minSpeed;
+	real turnSpeed;
+	real acceleration;
 
-	double avoidFactor;
-	double matchingFactor;
-	double centeringFactor;
-	double borderingFactor;
+	real avoidFactor;
+	real matchingFactor;
+	real centeringFactor;
+	real borderingFactor;
 
 	int maxVisible;
-	double visionRadius;
-	double visionRadiusSq;
-	double protectedRange;
-	double protectedRangeSq;
-	double poiFactor;
+	real visionRadius;
+	real visionRadiusSq;
+	real protectedRange;
+	real protectedRangeSq;
+	real poiFactor;
 
 } SimulationParameters;
 

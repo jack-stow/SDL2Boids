@@ -12,16 +12,16 @@
 #include "vector2.h"
 #include "draw.h"
 #include <float.h>
-
+#include "types.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define CLAMP(x, min, max) ((x) < (min) ? (min) : ((x) > (max) ? (max) : (x)))
 #define LERP(a, b, t) ((a) + (t) * ((b) - (a)))
 
-double angle_lerp(double a, double b, double t);
-double normalize_angle(double a);
-double rand_range_double(double min, double max);
+real angle_lerp(real a, real b, real t);
+real normalize_angle(real a);
+real rand_range_real(real min, real max);
 
 typedef struct
 {
