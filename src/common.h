@@ -10,6 +10,7 @@
 #include "string.h"
 #include "structs.h"
 #include "vector2.h"
+#include "vectormath.h"
 #include "draw.h"
 #include <float.h>
 #include "types.h"

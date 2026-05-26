@@ -65,6 +65,24 @@ vec2 poi_get_force(PointOfInterest* poi, Boid* boid, SimulationParameters* sim)
 	return (vec2){0, 0};
 }
 
+vec2 poi_get_force_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, SOASimulationParameters* sim)
+{
+	if (!poi->active)
+	{
+		return (vec2) { 0, 0 };
+	}
+	vec2 boidPos = { boid->x[boidIndex], boid->y[boidIndex] };
+	vec2 poiPos = { poi->x, poi->y };
+	vec2 direction = vec_sub(poiPos, boidPos);
+	real distanceSq = vec_mag_sq(direction);
+	if (distanceSq < poi->attractionRadiusSq)
+	{
+		real force = (R(1.0) - distanceSq / poi->attractionRadiusSq) * R(sim->poiFactor);
+		return vec_mul(vec_norm(direction), force);
+	}
+	return (vec2) { 0, 0 };
+}
+
 bool consume_poi(PointOfInterest* poi, Boid* boid, int damage)
 {
 	if (!poi->active)
@@ -81,6 +99,27 @@ bool consume_poi(PointOfInterest* poi, Boid* boid, int damage)
 		{
 			poi->active = false;
 		}	
+		return true;
+	}
+	return false;
+}
+
+bool consume_poi_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, int damage)
+{
+	if (!poi->active)
+	{
+		return false;
+	}
+	vec2 boidPos = { boid->x[boidIndex], boid->y[boidIndex] };
+	vec2 poiPos = { poi->x, poi->y };
+	real distSq = vec_mag_sq(vec_sub(poiPos, boidPos));
+	if (distSq <= poi->radiusSq)
+	{
+		poi->health -= damage;
+		if (poi->health <= 0)
+		{
+			poi->active = false;
+		}
 		return true;
 	}
 	return false;

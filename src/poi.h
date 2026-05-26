@@ -1,6 +1,7 @@
 #pragma once
 #include "boid.h"
 #include "vector2.h"
+#include "boidSOA.h"
 
 #define NUM_POI 10
 #define POI_HEALTH 500
@@ -26,4 +27,6 @@ PointOfInterest poi_reinitialize(PointOfInterest* poi);
 void poi_draw(PointOfInterest* poi, Color color);
 vec2 poi_get_direction_vector(PointOfInterest* poi, Boid* boid);
 vec2 poi_get_force(PointOfInterest* poi, Boid* boid, SimulationParameters* sim);
+vec2 poi_get_force_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, SOASimulationParameters* sim);
 bool consume_poi(PointOfInterest* poi, Boid* boid, int damage);
+bool consume_poi_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, int damage);

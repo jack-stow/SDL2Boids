@@ -5,8 +5,8 @@
 #include "init.h"
 #include "input.h"
 #include "main.h"
-#include "boid.h"
-#include "flockbehavior.h"
+#include "boidSOA.h"
+#include "flockbehaviorSOA.h"
 #include "poi.h"
 
 App    app;
@@ -171,7 +171,8 @@ int main(int argc, char* argv[])
 	real posY = 100.0;
 
 
-	SimulationParameters sim = {
+	SOASimulationParameters sim = {
+		.numBoids = BOID_COUNT,
 		.topSpeed = R(TOP_SPEED),
 		.minSpeed = R(MIN_SPEED),
 		.turnSpeed = R(TURN_SPEED),
@@ -195,17 +196,31 @@ int main(int argc, char* argv[])
 
 	int boidCount = BOID_COUNT;
 
-	Boid* boids = malloc(sizeof(Boid) * boidCount);
+	/*BoidSOA* boids = malloc(sizeof(BoidSOA) * boidCount);
 
 	if (boids == NULL)
 	{
 		SDL_Log("Failed to allocate boids");
 		exit(1);
-	}
+	}*/
 
-	for (size_t i = 0; i < boidCount; i++)
+	/*for (size_t i = 0; i < boidCount; i++)
 	{
 		boids[i] = boid_create(&sim);
+	}*/
+
+	BoidSOA* boids = boidsoa_create(&sim);
+
+	for (int i = 0; i < 10; i++)
+	{
+		SDL_Log("boid %d pos=(%f,%f) speed=(%f,%f) angle=%f",
+			i,
+			(double)boids->x[i],
+			(double)boids->y[i],
+			(double)boids->speedX[i],
+			(double)boids->speedY[i],
+			(double)boids->angle[i]
+		);
 	}
 
 	int poiCount = NUM_POI;
@@ -280,11 +295,11 @@ int main(int argc, char* argv[])
 
 		Uint64 updateStart = SDL_GetPerformanceCounter();
 
-		UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
+		UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
-		DrawBoids(boids, boidCount, &sim);
+		DrawBoidsSOA(boids, &sim);
 
 		for (size_t i = 0; i < poiCount; i++)
 		{
@@ -296,9 +311,9 @@ int main(int argc, char* argv[])
 			//poipoi_draw(&pointsOfInterest[i], poiColor);
 		}
 
-		draw_circle(boids[0].x, boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
+		//draw_circle(boids[0].x, boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
 
-		draw_circle(boids[0].x, boids[0].y, sim.protectedRange, (Color) {255, 0, 255, 255}, false);
+		//draw_circle(boids[0].x, boids[0].y, sim.protectedRange, (Color) {255, 0, 255, 255}, false);
 
 		Uint64 drawEnd = SDL_GetPerformanceCounter();
 
