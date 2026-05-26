@@ -6,26 +6,26 @@
 #define BOID_SCALE        (R(0.1))
 
 // Real casting macro kept to the outside because FRAME_RATE is a double.
-#define TOP_SPEED         (R(5.0 * FRAME_RATE))
-#define MIN_SPEED         (TOP_SPEED * R(0.4))
-#define TURN_SPEED        (R(30.0) / TOP_SPEED)
-#define ACCELERATION      (R(0.1 * FRAME_RATE))
+#define TOP_SPEED_SOA         (R(5.0 * FRAME_RATE))
+#define MIN_SPEED_SOA         (TOP_SPEED_SOA * R(0.4))
+#define TURN_SPEED_SOA        (R(30.0) / TOP_SPEED_SOA)
+#define ACCELERATION_SOA      (R(0.1 * FRAME_RATE))
 
-#define AVOID_FACTOR      (R(1.35 * FRAME_RATE))
-#define MATCHING_FACTOR   (R(0.1 * FRAME_RATE))
-#define CENTERING_FACTOR  (R(0.1 * FRAME_RATE))
-#define BORDERING_FACTOR  (R(5.0 * FRAME_RATE))
+#define AVOID_FACTOR_SOA      (R(1.35 * FRAME_RATE))
+#define MATCHING_FACTOR_SOA   (R(0.1 * FRAME_RATE))
+#define CENTERING_FACTOR_SOA  (R(0.1 * FRAME_RATE))
+#define BORDERING_FACTOR_SOA  (R(5.0 * FRAME_RATE))
 
-#define POI_FACTOR        (R(10.0))
+#define POI_FACTOR_SOA        (R(10.0))
 
-#define BOID_COUNT 	      (500)
+#define BOID_COUNT_SOA 	      (2000)
 
-#define MAX_VISIBLE       (10)
-#define VISION_RADIUS     (R(70.0))
-#define PROTECTED_RANGE   (R(5.0))
+#define MAX_VISIBLE_SOA       (10)
+#define VISION_RADIUS_SOA     (R(70.0))
+#define PROTECTED_RANGE_SOA   (R(5.0))
 
 
-#define BOID_TEXTURE      "gfx/boid.png"
+#define BOID_TEXTURE_SOA      "gfx/boid.png"
 
 typedef struct
 {

@@ -33,7 +33,7 @@ void printStats(void)
 
 	printf("Real type: %s\n", REAL_TYPE_NAME);
 
-	printf("Boids: %d\n", BOID_COUNT);
+	printf("Boids: %d\n", BOID_COUNT_SOA);
 	printf("POIs: %d\n", NUM_POI);
 	printf("Seed: %d\n", RNG_SEED);
 	printf("Benchmark Frames: %d\n", BENCHMARK_FRAMES);
@@ -172,29 +172,29 @@ int main(int argc, char* argv[])
 
 
 	SOASimulationParameters sim = {
-		.numBoids = BOID_COUNT,
-		.topSpeed = R(TOP_SPEED),
-		.minSpeed = R(MIN_SPEED),
-		.turnSpeed = R(TURN_SPEED),
-		.acceleration = R(ACCELERATION),
+		.numBoids = BOID_COUNT_SOA,
+		.topSpeed = R(TOP_SPEED_SOA),
+		.minSpeed = R(MIN_SPEED_SOA),
+		.turnSpeed = R(TURN_SPEED_SOA),
+		.acceleration = R(ACCELERATION_SOA),
 
-		.avoidFactor = R(AVOID_FACTOR),
-		.matchingFactor = R(MATCHING_FACTOR),
-		.centeringFactor = R(CENTERING_FACTOR),
-		.borderingFactor = R(BORDERING_FACTOR),
+		.avoidFactor = R(AVOID_FACTOR_SOA),
+		.matchingFactor = R(MATCHING_FACTOR_SOA),
+		.centeringFactor = R(CENTERING_FACTOR_SOA),
+		.borderingFactor = R(BORDERING_FACTOR_SOA),
 
-		.maxVisible = MAX_VISIBLE,
-		.visionRadius = R(VISION_RADIUS),
-		.visionRadiusSq = R(VISION_RADIUS) * R(VISION_RADIUS),
-		.protectedRange = R(PROTECTED_RANGE),
-		.protectedRangeSq = R(PROTECTED_RANGE) * R(PROTECTED_RANGE),
+		.maxVisible = MAX_VISIBLE_SOA,
+		.visionRadius = R(VISION_RADIUS_SOA),
+		.visionRadiusSq = R(VISION_RADIUS_SOA) * R(VISION_RADIUS_SOA),
+		.protectedRange = R(PROTECTED_RANGE_SOA),
+		.protectedRangeSq = R(PROTECTED_RANGE_SOA) * R(PROTECTED_RANGE_SOA),
 
-		.poiFactor = R(POI_FACTOR),
+		.poiFactor = R(POI_FACTOR_SOA),
 
-		.texture = loadTexture(BOID_TEXTURE)
+		.texture = loadTexture(BOID_TEXTURE_SOA)
 	};
 
-	int boidCount = BOID_COUNT;
+	int boidCount = BOID_COUNT_SOA;
 
 	/*BoidSOA* boids = malloc(sizeof(BoidSOA) * boidCount);
 

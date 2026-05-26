@@ -24,166 +24,209 @@ void UpdateBoidsSOA(BoidSOA* boids, SOASimulationParameters* sim, PointOfInteres
 		if (boids->y[i] > SCREEN_HEIGHT) boids->y[i] -= SCREEN_HEIGHT;
     }
 }
+void FlockSOA(
+    BoidSOA* boidSOA,
+    int boidIndex,
+    SOASimulationParameters* sim,
+    PointOfInterest* pointsOfInterest,
+    int poiCount,
+    real deltaTime)
+{
+    real myX = boidSOA->x[boidIndex];
+    real myY = boidSOA->y[boidIndex];
+    real mySpeedX = boidSOA->speedX[boidIndex];
+    real mySpeedY = boidSOA->speedY[boidIndex];
 
-void FlockSOA(BoidSOA* boidSOA, int boidIndex, SOASimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
+    real avoidX = R(0.0);
+    real avoidY = R(0.0);
 
-    vec2 avoid = { 0, 0 };
-    vec2 align = { 0, 0 };
-    vec2 cohere = { 0, 0 };
+    real alignX = R(0.0);
+    real alignY = R(0.0);
 
+    real cohereX = R(0.0);
+    real cohereY = R(0.0);
 
     int avoidCount = 0;
     int alignCount = 0;
     int cohesionCount = 0;
-    
 
     for (int i = 0; i < sim->numBoids; i++)
     {
         if (i == boidIndex)
-        {
             continue;
-        }
 
         if (alignCount >= sim->maxVisible)
-        {
             break;
-        }
 
-        real distanceSq = vec_dist_sq_xy(
-            boidSOA->x[boidIndex],
-            boidSOA->y[boidIndex],
-            boidSOA->x[i],
-            boidSOA->y[i]
-        );
-        if (distanceSq <= 0.0 || distanceSq >= sim->visionRadiusSq)
-        {
+        real otherX = boidSOA->x[i];
+        real otherY = boidSOA->y[i];
+
+        real dx = myX - otherX;
+        real dy = myY - otherY;
+
+        real distanceSq = dx * dx + dy * dy;
+
+        if (distanceSq <= R(0.0) || distanceSq >= sim->visionRadiusSq)
             continue;
+
+        if (distanceSq < sim->protectedRangeSq)
+        {
+            real invDistanceSq = R(1.0) / distanceSq;
+
+            avoidX += dx * invDistanceSq;
+            avoidY += dy * invDistanceSq;
+
+            avoidCount++;
         }
 
-		// Avoidance
-		if (distanceSq < sim->protectedRangeSq)
-		{
-			real awayX = boidSOA->x[boidIndex] - boidSOA->x[i];
-			real awayY = boidSOA->y[boidIndex] - boidSOA->y[i];
+        alignX += boidSOA->speedX[i];
+        alignY += boidSOA->speedY[i];
+        alignCount++;
 
-			// Stronger avoidance when very close
-			awayX *= ((real)1.0) / distanceSq;
-			awayY *= ((real)1.0) / distanceSq;
-
-			avoid.x += awayX;
-			avoid.y += awayY;
-			
-            avoidCount++;
-		}
-
-		// Alignment
-
-		align.x += boidSOA->speedX[i];
-		align.y += boidSOA->speedY[i];
-		alignCount++;
-
-		// Cohesion
-
-		cohere.x += boidSOA->x[i];
-		cohere.y += boidSOA->y[i];
-		cohesionCount++;
-
+        cohereX += otherX;
+        cohereY += otherY;
+        cohesionCount++;
     }
 
-	if (avoidCount > 0)
-	{
-		avoid.x *= R(1.0) / (real)avoidCount;
-		avoid.y *= R(1.0) / (real)avoidCount;
-		real mag = vec_mag_xy(avoid.x, avoid.y);
-		if (mag > 0)
-		{
-			avoid.x /= mag;
-			avoid.y /= mag;
-		}
-	}
-	if (alignCount > 0)
-	{
-		align.x *= R(1.0) / (real)alignCount;
-		align.y *= R(1.0) / (real)alignCount;
+    if (avoidCount > 0)
+    {
+        real invAvoidCount = R(1.0) / (real)avoidCount;
 
-		align.x -= boidSOA->speedX[boidIndex];
-		align.y -= boidSOA->speedY[boidIndex];
+        avoidX *= invAvoidCount;
+        avoidY *= invAvoidCount;
 
-		vec_norm_xy(align.x, align.y, &align.x, &align.y);
-	}
+        vec_norm_xy(avoidX, avoidY, &avoidX, &avoidY);
+    }
 
-	if (cohesionCount > 0)
-	{
-		cohere.x *= R(1.0) / (real)cohesionCount;
-		cohere.y *= R(1.0) / (real)cohesionCount;
+    if (alignCount > 0)
+    {
+        real invAlignCount = R(1.0) / (real)alignCount;
 
-		cohere.x -= boidSOA->x[boidIndex];
-		cohere.y -= boidSOA->y[boidIndex];
+        alignX *= invAlignCount;
+        alignY *= invAlignCount;
 
-		vec_norm_xy(cohere.x, cohere.y, &cohere.x, &cohere.y);
-	}
+        alignX -= mySpeedX;
+        alignY -= mySpeedY;
 
-	vec2 flockForce = { 0, 0 };
+        vec_norm_xy(alignX, alignY, &alignX, &alignY);
+    }
 
-	flockForce.x += avoid.x * sim->avoidFactor;
-	flockForce.y += avoid.y * sim->avoidFactor;
+    if (cohesionCount > 0)
+    {
+        real invCohesionCount = R(1.0) / (real)cohesionCount;
 
-	flockForce.x += align.x * sim->matchingFactor;
-	flockForce.y += align.y * sim->matchingFactor;
+        cohereX *= invCohesionCount;
+        cohereY *= invCohesionCount;
 
-	flockForce.x += cohere.x * sim->centeringFactor;
-	flockForce.y += cohere.y * sim->centeringFactor;
+        cohereX -= myX;
+        cohereY -= myY;
 
-	vec2 wallForce = AvoidBordersSOA(boidSOA, boidIndex, BORDER_MARGIN);
+        vec_norm_xy(cohereX, cohereY, &cohereX, &cohereY);
+    }
 
-	vec2 poiForce = { 0, 0 };
+    real flockForceX = R(0.0);
+    real flockForceY = R(0.0);
 
-	PointOfInterest* closestPOI = NULL;
-	real closestDistSq = REAL_MAX;
-	for (int i = 0; i < poiCount; i++)
-	{
-		if (!pointsOfInterest[i].active)
-		{
-			continue;
-		}
-		real offsetX = pointsOfInterest[i].x - boidSOA->x[boidIndex];
-		real offsetY = pointsOfInterest[i].y - boidSOA->y[boidIndex];
-		real distSq = offsetX * offsetX + offsetY * offsetY;
-		if (distSq < closestDistSq)
-		{
-			closestDistSq = distSq;
-			closestPOI = &pointsOfInterest[i];
-		}
-	}
-	if (closestPOI != NULL)
-	{
-		poiForce = poi_get_force_soa(closestPOI, boidSOA, boidIndex, sim);
-		consume_poi_soa(closestPOI, boidSOA, boidIndex, 1);
-	}
+    flockForceX += avoidX * sim->avoidFactor;
+    flockForceY += avoidY * sim->avoidFactor;
 
-	flockForce = vec_add(flockForce, vec_mul(poiForce, sim->poiFactor));
+    flockForceX += alignX * sim->matchingFactor;
+    flockForceY += alignY * sim->matchingFactor;
 
-	flockForce = vec_add(flockForce, vec_mul(wallForce, sim->borderingFactor));
+    flockForceX += cohereX * sim->centeringFactor;
+    flockForceY += cohereY * sim->centeringFactor;
 
-	vec2 acceleration = vec_mul(flockForce, R(1.0) / sim->turnSpeed);
+    real wallForceX = R(0.0);
+    real wallForceY = R(0.0);
 
-	boidSOA->speedX[boidIndex] += acceleration.x * deltaTime;
-	boidSOA->speedY[boidIndex] += acceleration.y * deltaTime;
+    if (myX < BORDER_MARGIN)
+    {
+        real t = (BORDER_MARGIN - myX) / BORDER_MARGIN;
+        wallForceX += t * t;
+    }
+    else if (myX > SCREEN_WIDTH - BORDER_MARGIN)
+    {
+        real t = (myX - (SCREEN_WIDTH - BORDER_MARGIN)) / BORDER_MARGIN;
+        wallForceX -= t * t;
+    }
 
-	vec_clamp_mag_xy(
-		boidSOA->speedX[boidIndex],
-		boidSOA->speedY[boidIndex],
-		sim->minSpeed,
-		sim->topSpeed,
-		&boidSOA->speedX[boidIndex],
-		&boidSOA->speedY[boidIndex]
-	);
+    if (myY < BORDER_MARGIN)
+    {
+        real t = (BORDER_MARGIN - myY) / BORDER_MARGIN;
+        wallForceY += t * t;
+    }
+    else if (myY > SCREEN_HEIGHT - BORDER_MARGIN)
+    {
+        real t = (myY - (SCREEN_HEIGHT - BORDER_MARGIN)) / BORDER_MARGIN;
+        wallForceY -= t * t;
+    }
 
-	if (vec_mag_xy(boidSOA->speedX[boidIndex], boidSOA->speedY[boidIndex]) > 0.01)
-	{
-		boidSOA->angle[boidIndex] = REAL_ATAN2(boidSOA->speedY[boidIndex], boidSOA->speedX[boidIndex]) * R(180.0) / REAL_PI;
-	}
-	
+    flockForceX += wallForceX * sim->borderingFactor;
+    flockForceY += wallForceY * sim->borderingFactor;
+
+    
+    // Keep POI disabled until base flocking is confirmed stable.
+    real poiForceX = R(0.0);
+    real poiForceY = R(0.0);
+
+    PointOfInterest* closestPOI = NULL;
+    real closestDistSq = REAL_MAX;
+
+    for (int i = 0; i < poiCount; i++)
+    {
+        if (!pointsOfInterest[i].active)
+            continue;
+
+        real offsetX = pointsOfInterest[i].x - myX;
+        real offsetY = pointsOfInterest[i].y - myY;
+        real distSq = offsetX * offsetX + offsetY * offsetY;
+
+        if (distSq < closestDistSq)
+        {
+            closestDistSq = distSq;
+            closestPOI = &pointsOfInterest[i];
+        }
+    }
+
+    if (closestPOI != NULL)
+    {
+        vec2 poiForce = poi_get_force_soa(closestPOI, boidSOA, boidIndex, sim);
+
+        poiForceX = poiForce.x;
+        poiForceY = poiForce.y;
+
+        consume_poi_soa(closestPOI, boidSOA, boidIndex, 1);
+    }
+
+    flockForceX += poiForceX * sim->poiFactor;
+    flockForceY += poiForceY * sim->poiFactor;
+    
+
+    real invTurnSpeed = R(1.0) / sim->turnSpeed;
+
+    real accelerationX = flockForceX * invTurnSpeed;
+    real accelerationY = flockForceY * invTurnSpeed;
+
+    mySpeedX += accelerationX * deltaTime;
+    mySpeedY += accelerationY * deltaTime;
+
+    vec_clamp_mag_xy(
+        mySpeedX,
+        mySpeedY,
+        sim->minSpeed,
+        sim->topSpeed,
+        &mySpeedX,
+        &mySpeedY
+    );
+
+    boidSOA->speedX[boidIndex] = mySpeedX;
+    boidSOA->speedY[boidIndex] = mySpeedY;
+
+    if (vec_mag_sq_xy(mySpeedX, mySpeedY) > R(0.0001))
+    {
+        boidSOA->angle[boidIndex] =
+            REAL_ATAN2(mySpeedY, mySpeedX) * RAD_TO_DEG;
+    }
 }
 
 vec2 AvoidBordersSOA(BoidSOA* boidSOA, int boidIndex, real borderMargin) {
