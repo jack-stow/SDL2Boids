@@ -2,7 +2,7 @@
 #include "boid.h"
 #include <time.h>
 
-Boid boid_create(SimulationParameters sim, char* texture)
+Boid boid_create(SimulationParameters* sim)
 {
     Boid boid;
 
@@ -15,23 +15,18 @@ Boid boid_create(SimulationParameters sim, char* texture)
     dir = vec_norm(dir);
 
     // Random speed magnitude
-    real speed = ((real)rand() / (real)RAND_MAX) * sim.topSpeed;
+    real speed = ((real)rand() / (real)RAND_MAX) * sim->topSpeed;
 
-	speed = CLAMP(speed, sim.minSpeed, sim.topSpeed);
+	speed = CLAMP(speed, sim->minSpeed, sim->topSpeed);
 
     boid.speed = vec_mul(dir, speed);
-    boid.desiredSpeed = boid.speed;
 
     boid.angle = REAL_ATAN2(boid.speed.y, boid.speed.x) * RAD_TO_DEG;
-
-    boid.desiredAngle = boid.angle;
-
-    boid.texture = loadTexture(texture);
 
     return boid;
 }
 
-void drawBoid(Boid* boid)
+void drawBoid(Boid* boid, SimulationParameters* sim)
 {
-	blit(boid->texture, boid->x, boid->y, boid->angle, R(BOID_SCALE));
+	blit(sim->texture, boid->x, boid->y, boid->angle, R(BOID_SCALE));
 }

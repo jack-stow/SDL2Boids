@@ -1,13 +1,13 @@
 #include "flockbehavior.h"
 
-void DrawBoids(Boid* boids, int numBoids) {
+void DrawBoids(Boid* boids, int numBoids, SimulationParameters* sim) {
 	for (size_t i = 0; i < numBoids; i++)
 	{
-		drawBoid(&boids[i]);
+		drawBoid(&boids[i], sim);
 	}
 }
 
-void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
+void UpdateBoids(Boid* boids, int numBoids, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
     
     for (size_t i = 0; i < numBoids; i++)
     {
@@ -26,7 +26,7 @@ void UpdateBoids(Boid* boids, int numBoids, SimulationParameters sim, PointOfInt
     }
 }
 
-void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
+void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
     vec2 avoid = { 0, 0 };
     vec2 align = { 0, 0 };
     vec2 cohere = { 0, 0 };
@@ -46,7 +46,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
             continue;
         }
 
-        if (alignCount >= sim.maxVisible)
+        if (alignCount >= sim->maxVisible)
         {
             break;
         }
@@ -54,13 +54,13 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
         vec2 otherPos = { other->x, other->y };
 
 		real distanceSq = vec_dist_sq(boidPos, otherPos);
-        if (distanceSq <= 0.0 || distanceSq >= sim.visionRadiusSq)
+        if (distanceSq <= 0.0 || distanceSq >= sim->visionRadiusSq)
         {
             continue;
 		}
 
         // Avoidance
-        if (distanceSq < sim.protectedRangeSq)
+        if (distanceSq < sim->protectedRangeSq)
         {
             vec2 away = vec_sub(boidPos, otherPos);
 
@@ -102,9 +102,9 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
 
     vec2 flockForce = { 0, 0 };
 
-    flockForce = vec_add(flockForce, vec_mul(avoid, sim.avoidFactor));
-    flockForce = vec_add(flockForce, vec_mul(align, sim.matchingFactor));
-    flockForce = vec_add(flockForce, vec_mul(cohere, sim.centeringFactor));
+    flockForce = vec_add(flockForce, vec_mul(avoid, sim->avoidFactor));
+    flockForce = vec_add(flockForce, vec_mul(align, sim->matchingFactor));
+    flockForce = vec_add(flockForce, vec_mul(cohere, sim->centeringFactor));
 
     vec2 wallForce = AvoidBorders(boid, BORDER_MARGIN);
 	vec2 poiForce = { 0, 0 };
@@ -130,34 +130,29 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters sim, Poin
     }
     if (closestPOI != NULL)
     {
-        poiForce = poi_get_force(closestPOI, boid, &sim);
+        poiForce = poi_get_force(closestPOI, boid, sim);
         consume_poi(closestPOI, boid, 1);
     }
 
-    flockForce = vec_add(flockForce, vec_mul(poiForce, sim.poiFactor));
+    flockForce = vec_add(flockForce, vec_mul(poiForce, sim->poiFactor));
 
-    flockForce = vec_add(flockForce, vec_mul(wallForce, sim.borderingFactor));
+    flockForce = vec_add(flockForce, vec_mul(wallForce, sim->borderingFactor));
 
 
-    vec2 acceleration = vec_mul(flockForce, R(1.0) / R(sim.turnSpeed));
+    vec2 acceleration = vec_mul(flockForce, R(1.0) / sim->turnSpeed);
 
     boid->speed = vec_add(boid->speed, vec_mul(acceleration, deltaTime));
 
     boid->speed = vec_clamp_mag(
         boid->speed,
-        R(sim.minSpeed),
-        R(sim.topSpeed)
+        R(sim->minSpeed),
+        R(sim->topSpeed)
     );
 
     if (vec_mag(boid->speed) > 0.01)
     {
-        boid->desiredAngle = REAL_ATAN2(boid->speed.y, boid->speed.x) * R(180.0) / REAL_PI;
+        boid->angle = REAL_ATAN2(boid->speed.y, boid->speed.x) * R(180.0) / REAL_PI;
     }
-
-
-    boid->angle = normalize_angle(
-        angle_lerp(boid->angle, boid->desiredAngle, 0.25)
-    );
 }
 
 

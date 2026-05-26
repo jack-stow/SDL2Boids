@@ -18,7 +18,7 @@
 
 #define POI_FACTOR        (R(10.0))
 
-#define BOID_COUNT 	      (2000)
+#define BOID_COUNT 	      (500)
 
 #define MAX_VISIBLE       (10)
 #define VISION_RADIUS     (R(70.0))
@@ -33,13 +33,10 @@ typedef struct
 	real          y;
 
 	vec2 speed;
-	vec2 desiredSpeed;
 
 	real angle;
-	real desiredAngle;
 
-
-	SDL_Texture* texture;
+	
 } Boid;
 
 typedef struct
@@ -61,12 +58,14 @@ typedef struct
 	real protectedRangeSq;
 	real poiFactor;
 
+	SDL_Texture* texture;
+
 } SimulationParameters;
 
-Boid boid_create(SimulationParameters sim, char* texture);
+Boid boid_create(SimulationParameters* sim);
 
 
-void drawBoid(Boid* boid);
+void drawBoid(Boid* boid, SimulationParameters* sim);
 
 
 #endif

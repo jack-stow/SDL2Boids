@@ -188,7 +188,9 @@ int main(int argc, char* argv[])
 		.protectedRange = R(PROTECTED_RANGE),
 		.protectedRangeSq = R(PROTECTED_RANGE) * R(PROTECTED_RANGE),
 
-		.poiFactor = R(POI_FACTOR)
+		.poiFactor = R(POI_FACTOR),
+
+		.texture = loadTexture(BOID_TEXTURE)
 	};
 
 	int boidCount = BOID_COUNT;
@@ -203,7 +205,7 @@ int main(int argc, char* argv[])
 
 	for (size_t i = 0; i < boidCount; i++)
 	{
-		boids[i] = boid_create(sim, BOID_TEXTURE);
+		boids[i] = boid_create(&sim);
 	}
 
 	int poiCount = NUM_POI;
@@ -278,11 +280,11 @@ int main(int argc, char* argv[])
 
 		Uint64 updateStart = SDL_GetPerformanceCounter();
 
-		UpdateBoids(boids, boidCount, sim, pointsOfInterest, poiCount, deltaTimeReal);
+		UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
-		DrawBoids(boids, boidCount);
+		DrawBoids(boids, boidCount, &sim);
 
 		for (size_t i = 0; i < poiCount; i++)
 		{
