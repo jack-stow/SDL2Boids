@@ -5,8 +5,8 @@
 #include "init.h"
 #include "input.h"
 #include "main.h"
-#include "boidSOA.h"
-#include "flockbehaviorSOA.h"
+#include "boid.h"
+#include "flockbehavior.h"
 #include "poi.h"
 
 App    app;
@@ -33,7 +33,7 @@ void printStats(void)
 
 	printf("Real type: %s\n", REAL_TYPE_NAME);
 
-	printf("Boids: %d\n", BOID_COUNT_SOA);
+	printf("Boids: %d\n", BOID_COUNT);
 	printf("POIs: %d\n", NUM_POI);
 	printf("Seed: %d\n", RNG_SEED);
 	printf("Benchmark Frames: %d\n", BENCHMARK_FRAMES);
@@ -171,57 +171,45 @@ int main(int argc, char* argv[])
 	real posY = 100.0;
 
 
-	SOASimulationParameters sim = {
-		.numBoids = BOID_COUNT_SOA,
-		.topSpeed = R(TOP_SPEED_SOA),
-		.minSpeed = R(MIN_SPEED_SOA),
-		.turnSpeed = R(TURN_SPEED_SOA),
-		.acceleration = R(ACCELERATION_SOA),
+	SimulationParameters sim = {
 
-		.avoidFactor = R(AVOID_FACTOR_SOA),
-		.matchingFactor = R(MATCHING_FACTOR_SOA),
-		.centeringFactor = R(CENTERING_FACTOR_SOA),
-		.borderingFactor = R(BORDERING_FACTOR_SOA),
+		.topSpeed = R(TOP_SPEED),
+		.minSpeed = R(MIN_SPEED),
+		.turnSpeed = R(TURN_SPEED),
+		.acceleration = R(ACCELERATION),
 
-		.maxVisible = MAX_VISIBLE_SOA,
-		.visionRadius = R(VISION_RADIUS_SOA),
-		.visionRadiusSq = R(VISION_RADIUS_SOA) * R(VISION_RADIUS_SOA),
-		.protectedRange = R(PROTECTED_RANGE_SOA),
-		.protectedRangeSq = R(PROTECTED_RANGE_SOA) * R(PROTECTED_RANGE_SOA),
+		.avoidFactor = R(AVOID_FACTOR),
+		.matchingFactor = R(MATCHING_FACTOR),
+		.centeringFactor = R(CENTERING_FACTOR),
+		.borderingFactor = R(BORDERING_FACTOR),
 
-		.poiFactor = R(POI_FACTOR_SOA),
+		.maxVisible = MAX_VISIBLE,
+		.visionRadius = R(VISION_RADIUS),
+		.visionRadiusSq = R(VISION_RADIUS) * R(VISION_RADIUS),
+		.protectedRange = R(PROTECTED_RANGE),
+		.protectedRangeSq = R(PROTECTED_RANGE) * R(PROTECTED_RANGE),
 
-		.texture = loadTexture(BOID_TEXTURE_SOA)
+		.poiFactor = R(POI_FACTOR),
+
+		.texture = loadTexture(BOID_TEXTURE)
 	};
 
-	int boidCount = BOID_COUNT_SOA;
+	int boidCount = BOID_COUNT;
 
-	/*BoidSOA* boids = malloc(sizeof(BoidSOA) * boidCount);
+	Boid* boids = malloc(sizeof(Boid) * boidCount);
 
 	if (boids == NULL)
 	{
 		SDL_Log("Failed to allocate boids");
 		exit(1);
-	}*/
+	}
 
-	/*for (size_t i = 0; i < boidCount; i++)
+	for (size_t i = 0; i < boidCount; i++)
 	{
 		boids[i] = boid_create(&sim);
-	}*/
-
-	BoidSOA* boids = boidsoa_create(&sim);
-
-	for (int i = 0; i < 10; i++)
-	{
-		SDL_Log("boid %d pos=(%f,%f) speed=(%f,%f) angle=%f",
-			i,
-			(double)boids->x[i],
-			(double)boids->y[i],
-			(double)boids->speedX[i],
-			(double)boids->speedY[i],
-			(double)boids->angle[i]
-		);
 	}
+
+	//BoidSOA* boids = boidsoa_create(&sim);
 
 	int poiCount = NUM_POI;
 	PointOfInterest* pointsOfInterest = malloc(sizeof(PointOfInterest) * poiCount);
@@ -295,11 +283,13 @@ int main(int argc, char* argv[])
 
 		Uint64 updateStart = SDL_GetPerformanceCounter();
 
-		UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);
+		/*UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);*/
+
+		UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
-		DrawBoidsSOA(boids, &sim);
+		DrawBoids(boids, boidCount, &sim);
 
 		for (size_t i = 0; i < poiCount; i++)
 		{

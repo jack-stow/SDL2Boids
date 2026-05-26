@@ -46,6 +46,7 @@
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\poi.h" />
     <ClInclude Include="src\structs.h" />
+    <ClInclude Include="src\uniformgrid.h" />
     <ClInclude Include="src\vector2.h" />
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\vectormath.h" />

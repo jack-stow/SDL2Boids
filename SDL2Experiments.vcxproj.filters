@@ -87,6 +87,9 @@
     <ClInclude Include="src\vectormath.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\uniformgrid.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
