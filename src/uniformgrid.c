@@ -62,7 +62,7 @@ int UniformGrid_Init(UniformGrid* grid, float worldWidth, float worldHeight, flo
     Must be called before shutdown.
 */
 void UniformGrid_Free(UniformGrid* grid) {
-	ArenaFree(grid->arena);
+    ArenaRelease(grid->arena);
     free(grid->cells);
     free(grid);
 }

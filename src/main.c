@@ -211,6 +211,19 @@ int main(int argc, char* argv[])
 
 	//BoidSOA* boids = boidsoa_create(&sim);
 
+	UniformGrid grid;
+
+	if (!UniformGrid_Init(
+		&grid,
+		R(SCREEN_WIDTH),
+		R(SCREEN_HEIGHT),
+		sim.visionRadius,
+		boidCount
+	)) {
+		SDL_Log("Failed to initialize uniform grid");
+		exit(1);
+	}
+
 	int poiCount = NUM_POI;
 	PointOfInterest* pointsOfInterest = malloc(sizeof(PointOfInterest) * poiCount);
 
@@ -285,7 +298,9 @@ int main(int argc, char* argv[])
 
 		/*UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);*/
 
-		UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
+		//UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
+
+		UpdateBoidsGrid(boids, boidCount, &grid, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
