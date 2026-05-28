@@ -18,9 +18,9 @@
 
 #define POI_FACTOR        (R(10.0))
 
-#define BOID_COUNT 	      (2000)
+#define BOID_COUNT 	      (2500)
 
-#define MAX_VISIBLE       (2000)
+#define MAX_VISIBLE       (2500)
 #define VISION_RADIUS     (R(70.0))
 #define PROTECTED_RANGE   (R(5.0))
 
