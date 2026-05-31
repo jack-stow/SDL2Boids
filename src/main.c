@@ -1,4 +1,3 @@
-
 #include "common.h"
 
 #include "draw.h"
@@ -8,6 +7,7 @@
 #include "boid.h"
 #include "flockbehavior.h"
 #include "poi.h"
+
 
 App    app;
 Stats stats;
@@ -45,6 +45,11 @@ void printStats(void)
 		stats.minFps,
 		stats.fpsSum / stats.fpsSamples,
 		stats.maxFps);
+	
+	printf("Build Grid ms min/avg/max: %.4f / %.4f / %.4f\n",
+		stats.minGridBuildMs,
+		stats.gridBuildMsSum / stats.gridBuildSamples,
+		stats.maxGridBuildMs);
 
 	printf("Update ms min/avg/max: %.4f / %.4f / %.4f\n",
 		stats.minUpdateMs,
@@ -67,16 +72,20 @@ void printStats(void)
 	cleanup();
 }
 
-void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 drawEnd, Uint64 frameStart, Uint64 frameEnd, Uint64 performanceFreq) {
+void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 gridBuildEnd, Uint64 updateEnd, Uint64 drawEnd, Uint64 frameStart, Uint64 frameEnd, Uint64 performanceFreq) {
 
 	static double titleTimer = 0.0;
 	static int titleFrameCount = 0;
+	static double titleBuildGridMsSum = 0.0;
 	static double titleUpdateMsSum = 0.0;
 	static double titleDrawMsSum = 0.0;
 	static int titleSamples = 0;
 
+	double gridBuildMs =
+		(double)(gridBuildEnd - updateStart) / performanceFreq * MS_PER_SECOND;
+
 	double updateMs =
-		(double)(updateEnd - updateStart) / performanceFreq * MS_PER_SECOND;
+		(double)(updateEnd - gridBuildEnd) / performanceFreq * MS_PER_SECOND;
 
 	double drawMs =
 		(double)(drawEnd - updateEnd) / performanceFreq * MS_PER_SECOND;
@@ -103,6 +112,12 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 			stats.fpsSamples++;
 		}
 
+
+		if (gridBuildMs < stats.minGridBuildMs) stats.minGridBuildMs = gridBuildMs;
+		if (gridBuildMs > stats.maxGridBuildMs) stats.maxGridBuildMs = gridBuildMs;
+		stats.gridBuildMsSum += gridBuildMs;
+		stats.gridBuildSamples++;
+
 		if (updateMs < stats.minUpdateMs) stats.minUpdateMs = updateMs;
 		if (updateMs > stats.maxUpdateMs) stats.maxUpdateMs = updateMs;
 		stats.updateMsSum += updateMs;
@@ -116,6 +131,7 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 		titleTimer += deltaTime;
 		titleFrameCount++;
 
+		titleBuildGridMsSum += gridBuildMs;
 		titleUpdateMsSum += updateMs;
 		titleDrawMsSum += drawMs;
 		titleSamples++;
@@ -139,8 +155,9 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 			snprintf(
 				title,
 				sizeof(title),
-				"FPS: %.1f | Update: %.3f ms | Draw: %.3f ms | Work: %.3f ms | ETA: %.1fs",
+				"FPS: %.1f | Build Grid: %.3f ms | Update: %.3f ms | Draw: %.3f ms | Work: %.3f ms | ETA: %.1fs",
 				(double)titleFrameCount / titleTimer,
+				titleBuildGridMsSum / titleSamples,
 				titleUpdateMsSum / titleSamples,
 				titleDrawMsSum / titleSamples,
 				stats.frameWorkMsSum / stats.frameWorkSamples,
@@ -151,6 +168,7 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 
 			titleTimer = 0.0;
 			titleFrameCount = 0;
+			titleBuildGridMsSum = 0.0;
 			titleUpdateMsSum = 0.0;
 			titleDrawMsSum = 0.0;
 			titleSamples = 0;
@@ -158,6 +176,8 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 updateEnd, Uint64 
 	}
 
 }
+
+
 
 int main(int argc, char* argv[])
 {
@@ -198,7 +218,9 @@ int main(int argc, char* argv[])
 
 	Boid* boids = malloc(sizeof(Boid) * boidCount);
 
-	if (boids == NULL)
+	Boid* boidsNext = malloc(sizeof(Boid) * boidCount);
+
+	if (boids == NULL || boidsNext == NULL)
 	{
 		SDL_Log("Failed to allocate boids");
 		exit(1);
@@ -217,7 +239,7 @@ int main(int argc, char* argv[])
 		&grid,
 		R(SCREEN_WIDTH),
 		R(SCREEN_HEIGHT),
-		sim.visionRadius,
+		sim.visionRadius / R(4.0),
 		boidCount
 	)) {
 		SDL_Log("Failed to initialize uniform grid");
@@ -278,6 +300,39 @@ int main(int argc, char* argv[])
 	stats.frameWorkSamples = 0;
 
 	/////////////////////////
+	int numThreads = 16;//SDL_GetCPUCount();
+	SDL_Thread** threads = malloc(sizeof(SDL_Thread*) * numThreads);
+	char (*threadNames)[32] = malloc(sizeof(*threadNames) * numThreads);
+	FlockJob* jobs = malloc(sizeof(FlockJob) * numThreads);
+
+	for (int i = 0; i < numThreads; i++)
+	{
+		snprintf(threadNames[i], sizeof(threadNames[i]),
+			"BoidWorker %d", i);
+	}
+
+
+	pool.numThreads = numThreads;
+	pool.jobs = jobs;
+	pool.quit = 0;
+	pool.generation = 0;
+	pool.completed = 0;
+	pool.mutex = SDL_CreateMutex();
+	pool.startCond = SDL_CreateCond();
+	pool.doneCond = SDL_CreateCond();
+
+	int* threadIds = malloc(sizeof(int) * numThreads);
+
+	for (int i = 0; i < numThreads; i++)
+	{
+		threadIds[i] = i;
+		threads[i] = SDL_CreateThread(
+			PersistentWorkerMain,
+			threadNames[i],
+			&threadIds[i]
+		);
+	}
+
 
 	while (1)
 	{
@@ -299,8 +354,46 @@ int main(int argc, char* argv[])
 		/*UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);*/
 
 		//UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
+		UniformGrid_Build(&grid, boids, boidCount);
 
-		UpdateBoidsGrid(boids, boidCount, &grid, &sim, pointsOfInterest, poiCount, deltaTimeReal);
+		Uint64 gridBuildEnd = SDL_GetPerformanceCounter();
+
+
+		for (int i = 0; i < numThreads; i++)
+		{
+			int start = i * boidCount / numThreads;
+			int end = (i + 1) * boidCount / numThreads;
+
+			jobs[i] = initFlockJob(
+				start,
+				end,
+				boids,
+				boidsNext,
+				&grid,
+				&sim,
+				pointsOfInterest,
+				poiCount,
+				deltaTimeReal
+			);
+		}
+
+		SDL_LockMutex(pool.mutex);
+		pool.completed = 0;
+		pool.generation++;
+		SDL_CondBroadcast(pool.startCond);
+
+		while (pool.completed < numThreads)
+		{
+			SDL_CondWait(pool.doneCond, pool.mutex);
+		}
+
+		SDL_UnlockMutex(pool.mutex);
+
+		Boid* tmp = boids;
+		boids = boidsNext;
+		boidsNext = tmp;
+
+		//UpdateBoidsGrid(boids, boidCount, &grid, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
@@ -329,7 +422,7 @@ int main(int argc, char* argv[])
 		Uint64 performanceFreq = SDL_GetPerformanceFrequency();
 
 
-		UpdateStats(deltaTime, updateStart, updateEnd, drawEnd, frameStart, frameEnd, performanceFreq);
+		UpdateStats(deltaTime, updateStart, gridBuildEnd, updateEnd, drawEnd, frameStart, frameEnd, performanceFreq);
 
 
 		double frameSeconds =

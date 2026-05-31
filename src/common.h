@@ -4,6 +4,7 @@
 #include "defs.h"
 #include "math.h"
 #include "SDL2/SDL.h"
+#include "SDL2/SDL_thread.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include <stdbool.h>
@@ -35,6 +36,12 @@ typedef struct
     double maxFps;
     double fpsSum;
     int fpsSamples;
+
+
+    double minGridBuildMs;
+    double maxGridBuildMs;
+    double gridBuildMsSum;
+    int gridBuildSamples;
 
     double minUpdateMs;
     double maxUpdateMs;

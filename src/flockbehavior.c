@@ -47,9 +47,17 @@ void UpdateBoidsGrid(Boid* boids, int numBoids, UniformGrid* grid, SimulationPar
     }
 }
 
-void FlockGrid(int boidIndex, Boid* boids, UniformGrid* grid, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime)
+void FlockGrid(
+    int boidIndex,
+    const Boid* current,
+    Boid* boid,
+    UniformGrid* grid,
+    SimulationParameters* sim,
+    PointOfInterest* pointsOfInterest,
+    int poiCount,
+    real deltaTime
+)
 {
-
     vec2 avoid = { 0, 0 };
     vec2 align = { 0, 0 };
     vec2 cohere = { 0, 0 };
@@ -58,8 +66,6 @@ void FlockGrid(int boidIndex, Boid* boids, UniformGrid* grid, SimulationParamete
     int alignCount = 0;
     int cohesionCount = 0;
 
-
-    Boid* boid = &boids[boidIndex];
     vec2 boidPos = { boid->x, boid->y };
 
     GridQuery query = UniformGrid_GetQueryRange(
@@ -75,6 +81,9 @@ void FlockGrid(int boidIndex, Boid* boids, UniformGrid* grid, SimulationParamete
         {
             const GridCell* cell = UniformGrid_GetCellConst(grid, col, row);
 
+            if (cell == NULL)
+                continue;
+
             for (int n = 0; n < cell->count; n++)
             {
                 int otherIndex = grid->indices[cell->start + n];
@@ -82,10 +91,10 @@ void FlockGrid(int boidIndex, Boid* boids, UniformGrid* grid, SimulationParamete
                 if (otherIndex == boidIndex)
                     continue;
 
-                Boid* other = &boids[otherIndex];
-
                 if (alignCount >= sim->maxVisible)
                     goto done_neighbors;
+
+                const Boid* other = &current[otherIndex];
 
                 vec2 otherPos = { other->x, other->y };
                 real distanceSq = vec_dist_sq(boidPos, otherPos);
@@ -93,27 +102,20 @@ void FlockGrid(int boidIndex, Boid* boids, UniformGrid* grid, SimulationParamete
                 if (distanceSq <= R(0.0) || distanceSq >= sim->visionRadiusSq)
                     continue;
 
-                /* Existing avoidance / alignment / cohesion logic goes here. Basically copy the body of your old neighbor loop.*/
-                // Avoidance
                 if (distanceSq < sim->protectedRangeSq)
                 {
                     vec2 away = vec_sub(boidPos, otherPos);
-
-                    // Stronger avoidance when very close
-                    away = vec_mul(away, ((real)1.0) / distanceSq);
+                    away = vec_mul(away, R(1.0) / distanceSq);
 
                     avoid = vec_add(avoid, away);
                     avoidCount++;
                 }
 
-                // Alignment
                 align = vec_add(align, other->speed);
                 alignCount++;
 
-                // Cohesion
                 cohere = vec_add(cohere, otherPos);
                 cohesionCount++;
-
             }
         }
     }
@@ -155,9 +157,7 @@ done_neighbors:
     for (int i = 0; i < poiCount; i++)
     {
         if (!pointsOfInterest[i].active)
-        {
             continue;
-        }
 
         vec2 offset = poi_get_direction_vector(&pointsOfInterest[i], boid);
         real distSq = vec_mag_sq(offset);
@@ -168,6 +168,7 @@ done_neighbors:
             closestPOI = &pointsOfInterest[i];
         }
     }
+
     if (closestPOI != NULL)
     {
         poiForce = poi_get_force(closestPOI, boid, sim);
@@ -175,13 +176,14 @@ done_neighbors:
     }
 
     flockForce = vec_add(flockForce, vec_mul(poiForce, sim->poiFactor));
-
     flockForce = vec_add(flockForce, vec_mul(wallForce, sim->borderingFactor));
-
 
     vec2 acceleration = vec_mul(flockForce, R(1.0) / sim->turnSpeed);
 
-    boid->speed = vec_add(boid->speed, vec_mul(acceleration, deltaTime));
+    boid->speed = vec_add(
+        boid->speed,
+        vec_mul(acceleration, deltaTime)
+    );
 
     boid->speed = vec_clamp_mag(
         boid->speed,
@@ -189,9 +191,11 @@ done_neighbors:
         R(sim->topSpeed)
     );
 
-    if (vec_mag(boid->speed) > 0.01)
+    if (vec_mag(boid->speed) > R(0.01))
     {
-        boid->angle = REAL_ATAN2(boid->speed.y, boid->speed.x) * R(180.0) / REAL_PI;
+        boid->angle =
+            REAL_ATAN2(boid->speed.y, boid->speed.x) *
+            R(180.0) / REAL_PI;
     }
 }
 
@@ -352,4 +356,101 @@ vec2 AvoidBorders(Boid* boid, real borderMargin)
     }
 
     return force;
+}
+
+
+FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* next, UniformGrid* grid, SimulationParameters* sim, PointOfInterest* pois, int poiCount, real deltaTime)
+{
+    FlockJob flockJob = {
+        .startIndex = startIndex,
+        .endIndex = endIndex,
+        .current = current,
+        .next = next,
+        .grid = grid,
+        .sim = sim,
+        .pois = pois,
+        .poiCount = poiCount,
+        .deltaTime = deltaTime
+    };
+
+    return flockJob;
+}
+
+int WorkerMain(void* data)
+{
+    FlockJob* job = (FlockJob*)data;
+
+    if (job == NULL)
+    {
+        return 1;
+    }
+
+    for (int i = job->startIndex; i < job->endIndex; i++)
+    {
+        Boid updated = job->current[i];
+
+        FlockGrid(
+            i,
+            job->current,
+            &updated,
+            job->grid,
+            job->sim,
+            job->pois,
+            job->poiCount,
+            job->deltaTime
+        );
+
+        updated.x += updated.speed.x * job->deltaTime;
+        updated.y += updated.speed.y * job->deltaTime;
+
+        if (updated.x < 0) updated.x += SCREEN_WIDTH;
+        if (updated.x > SCREEN_WIDTH) updated.x -= SCREEN_WIDTH;
+
+        if (updated.y < 0) updated.y += SCREEN_HEIGHT;
+        if (updated.y > SCREEN_HEIGHT) updated.y -= SCREEN_HEIGHT;
+
+        job->next[i] = updated;
+    }
+
+    return 0;
+}
+
+
+int PersistentWorkerMain(void* data)
+{
+    int threadIndex = *(int*)data;
+    int lastGeneration = 0;
+
+    while (1)
+    {
+        SDL_LockMutex(pool.mutex);
+
+        while (!pool.quit && pool.generation == lastGeneration)
+        {
+            SDL_CondWait(pool.startCond, pool.mutex);
+        }
+
+        if (pool.quit)
+        {
+            SDL_UnlockMutex(pool.mutex);
+            return 0;
+        }
+
+        lastGeneration = pool.generation;
+        FlockJob job = pool.jobs[threadIndex];
+
+        SDL_UnlockMutex(pool.mutex);
+
+        WorkerMain(&job);
+
+        SDL_LockMutex(pool.mutex);
+        pool.completed++;
+
+        if (pool.completed == pool.numThreads)
+        {
+            SDL_CondSignal(pool.doneCond);
+        }
+
+        SDL_UnlockMutex(pool.mutex);
+    }
 }
