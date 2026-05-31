@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(shooter01 C)
+project(Boids C)
 
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_mixer CONFIG REQUIRED)
