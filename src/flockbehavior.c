@@ -34,7 +34,7 @@ void UpdateBoidsGrid(Boid* boids, int numBoids, UniformGrid* grid, SimulationPar
 
     for (int i = 0; i < numBoids; i++)
     {
-        FlockGrid(i, boids, grid, sim, pointsOfInterest, poiCount, deltaTime);
+        //FlockGrid(i, boids, grid, sim, pointsOfInterest, poiCount, deltaTime);
 
         boids[i].x += boids[i].speed.x * deltaTime;
         boids[i].y += boids[i].speed.y * deltaTime;
