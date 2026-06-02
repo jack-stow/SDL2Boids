@@ -300,7 +300,7 @@ int main(int argc, char* argv[])
 	stats.frameWorkSamples = 0;
 
 	/////////////////////////
-	int numThreads = 16;//SDL_GetCPUCount();
+	int numThreads = SDL_GetCPUCount();
 	SDL_Thread** threads = malloc(sizeof(SDL_Thread*) * numThreads);
 	char (*threadNames)[32] = malloc(sizeof(*threadNames) * numThreads);
 	FlockJob* jobs = malloc(sizeof(FlockJob) * numThreads);
