@@ -52,6 +52,7 @@ void FlockGrid(
     const Boid* current,
     Boid* boid,
     UniformGrid* grid,
+	Obstacles* obstacles,
     SimulationParameters* sim,
     PointOfInterest* pointsOfInterest,
     int poiCount,
@@ -149,6 +150,7 @@ done_neighbors:
     flockForce = vec_add(flockForce, vec_mul(cohere, sim->centeringFactor));
 
     vec2 wallForce = AvoidBorders(boid, BORDER_MARGIN);
+	vec2 obstacleForce = AvoidObstacle(boid, obstacles, sim->obstacleAvoidDistance);
     vec2 poiForce = { 0, 0 };
 
     PointOfInterest* closestPOI = NULL;
@@ -177,6 +179,7 @@ done_neighbors:
 
     flockForce = vec_add(flockForce, vec_mul(poiForce, sim->poiFactor));
     flockForce = vec_add(flockForce, vec_mul(wallForce, sim->borderingFactor));
+    flockForce = vec_add(flockForce, vec_mul(obstacleForce, sim->obstacleAvoidFactor));
 
     vec2 acceleration = vec_mul(flockForce, R(1.0) / sim->turnSpeed);
 
@@ -358,8 +361,54 @@ vec2 AvoidBorders(Boid* boid, real borderMargin)
     return force;
 }
 
+vec2 AvoidObstacle(Boid* boid, Obstacles* obstacles, real avoidDistance)
+{
+    vec2 force = { 0, 0 };
+    vec2 p = { boid->x, boid->y };
 
-FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* next, UniformGrid* grid, SimulationParameters* sim, PointOfInterest* pois, int poiCount, real deltaTime)
+    real avoidDistanceSq = avoidDistance * avoidDistance;
+
+    for (Obstacles* obstacle = obstacles; obstacle != NULL; obstacle = obstacle->next)
+    {
+        vec2 a = { obstacle->x1, obstacle->y1 };
+        vec2 b = { obstacle->x2, obstacle->y2 };
+
+        vec2 ab = vec_sub(b, a);
+        vec2 ap = vec_sub(p, a);
+
+        real abLenSq = vec_mag_sq(ab);
+
+        if (abLenSq <= R(0.0001))
+            continue;
+
+        real t = vec_dot(ap, ab) / abLenSq;
+        t = CLAMP(t, R(0.0), R(1.0));
+
+        vec2 closest = vec_add(a, vec_mul(ab, t));
+        vec2 away = vec_sub(p, closest);
+
+        real distSq = vec_mag_sq(away);
+
+        if (distSq <= R(0.0001) || distSq > avoidDistanceSq)
+            continue;
+
+        real dist = REAL_SQRT(distSq);
+
+        vec2 dir = vec_mul(away, R(1.0) / dist);
+
+        real strength = R(1.0) - (dist / avoidDistance);
+        strength = strength * strength;
+
+        force = vec_add(force, vec_mul(dir, strength));
+    }
+
+    return force;
+}
+
+
+
+
+FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* next, UniformGrid* grid, Obstacles* obstacles, SimulationParameters* sim, PointOfInterest* pois, int poiCount, real deltaTime)
 {
     FlockJob flockJob = {
         .startIndex = startIndex,
@@ -367,6 +416,7 @@ FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* n
         .current = current,
         .next = next,
         .grid = grid,
+		.obstacles = obstacles,
         .sim = sim,
         .pois = pois,
         .poiCount = poiCount,
@@ -394,6 +444,7 @@ int WorkerMain(void* data)
             job->current,
             &updated,
             job->grid,
+			job->obstacles,
             job->sim,
             job->pois,
             job->poiCount,

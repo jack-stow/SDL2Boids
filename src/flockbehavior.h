@@ -1,6 +1,7 @@
 #include "boid.h"
 #include "poi.h"
 #include "uniformgrid.h"
+#include "obstacles.h"
 
 typedef struct
 {
@@ -12,6 +13,8 @@ typedef struct
 
     UniformGrid* grid;
 
+	Obstacles* obstacles;
+
     SimulationParameters* sim;
 
     PointOfInterest* pois;
@@ -20,13 +23,15 @@ typedef struct
     real deltaTime;
 } FlockJob;
 
-FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* next, UniformGrid* grid, SimulationParameters* sim, PointOfInterest* pois, int poiCount, real deltaTime);
+FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* next, UniformGrid* grid, Obstacles* obstacles, SimulationParameters* sim, PointOfInterest* pois, int poiCount, real deltaTime);
 
 int WorkerMain(void* data);
 
 void Flock(Boid* boid, Boid *boids, int numBoids, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime);
 
 vec2 AvoidBorders(Boid* boid, real borderMargin);
+
+vec2 AvoidObstacle(Boid* boid, Obstacles* obstacle, real avoidDistance);
 
 void DrawBoids(Boid* boids, int numBoids, SimulationParameters* sim);
 void UpdateBoids(Boid* boids, int numBoids, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime);
@@ -46,6 +51,7 @@ void FlockGrid(
     const Boid* current,
     Boid* boid,
     UniformGrid* grid,
+    Obstacles* obstacles,
     SimulationParameters* sim,
     PointOfInterest* pointsOfInterest,
     int poiCount,

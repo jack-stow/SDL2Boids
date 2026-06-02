@@ -2,6 +2,9 @@
 
 #include "types.h"
 
+#include <stdbool.h>
+#include "vector2.h"
+
 real vec_mag_xy(real x, real y);
 
 real vec_mag_sq_xy(real x, real y);
@@ -32,3 +35,9 @@ void vec_lerp_xy(
     real* outX,
     real* outY
 );
+
+bool line_segments_intersect(
+    vec2 p1,
+    vec2 p2,
+    vec2 q1,
+    vec2 q2);

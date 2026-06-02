@@ -63,7 +63,7 @@ void blit(SDL_Texture* texture, real x, real y, real angle, real scale)
 //	SDL_RenderFillRect(app.renderer, &rect);
 //}
 
-void draw_circle(real x, real y, real radius, Color color, bool filled)
+void draw_circle(real x, real y, real radius, DrawColor color, bool filled)
 {
     SDL_SetRenderDrawColor(app.renderer, color.r, color.g, color.b, color.a);
     SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
@@ -96,4 +96,11 @@ void draw_circle(real x, real y, real radius, Color color, bool filled)
             }
         }
     }
+}
+
+void draw_line(real x1, real y1, real x2, real y2, DrawColor color)
+{
+    SDL_SetRenderDrawColor(app.renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
+	SDL_RenderDrawLine(app.renderer, (int)x1, (int)y1, (int)x2, (int)y2);
 }

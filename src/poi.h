@@ -24,7 +24,7 @@ typedef struct
 
 PointOfInterest poi_create_random(void);
 PointOfInterest poi_reinitialize(PointOfInterest* poi);
-void poi_draw(PointOfInterest* poi, Color color);
+void poi_draw(PointOfInterest* poi, DrawColor color);
 vec2 poi_get_direction_vector(PointOfInterest* poi, Boid* boid);
 vec2 poi_get_force(PointOfInterest* poi, Boid* boid, SimulationParameters* sim);
 vec2 poi_get_force_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, SOASimulationParameters* sim);

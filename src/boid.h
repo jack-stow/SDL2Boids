@@ -15,8 +15,11 @@
 #define MATCHING_FACTOR   (R(0.1 * FRAME_RATE))
 #define CENTERING_FACTOR  (R(0.1 * FRAME_RATE))
 #define BORDERING_FACTOR  (R(5.0 * FRAME_RATE))
+#define OBSTACLE_AVOID_FACTOR (R(50.0 * FRAME_RATE))
 
 #define POI_FACTOR        (R(10.0))
+
+#define OBSTACLE_AVOID_DISTANCE (R(10.0))
 
 #define BOID_COUNT 	      (25000)
 
@@ -50,6 +53,7 @@ typedef struct
 	real matchingFactor;
 	real centeringFactor;
 	real borderingFactor;
+	real obstacleAvoidFactor;
 
 	int maxVisible;
 	real visionRadius;
@@ -57,6 +61,8 @@ typedef struct
 	real protectedRange;
 	real protectedRangeSq;
 	real poiFactor;
+
+	real obstacleAvoidDistance;
 
 	SDL_Texture* texture;
 

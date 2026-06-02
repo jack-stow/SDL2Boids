@@ -29,6 +29,7 @@
     <ClCompile Include="src\init.c" />
     <ClCompile Include="src\input.c" />
     <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\obstacles.c" />
     <ClCompile Include="src\poi.c" />
     <ClCompile Include="src\uniformgrid.c" />
     <ClCompile Include="src\vector2.c" />
@@ -47,6 +48,7 @@
     <ClInclude Include="src\init.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\main.h" />
+    <ClInclude Include="src\obstacles.h" />
     <ClInclude Include="src\poi.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\uniformgrid.h" />

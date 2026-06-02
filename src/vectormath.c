@@ -77,3 +77,57 @@ void vec_clamp_mag_xy(
     *outX = x * scale;
     *outY = y * scale;
 }
+
+static real cross(vec2 a, vec2 b)
+{
+    return a.x * b.y - a.y * b.x;
+}
+
+bool line_segments_intersect(
+    vec2 p1,
+    vec2 p2,
+    vec2 q1,
+    vec2 q2)
+{
+    vec2 r = vec_sub(p2, p1);
+    vec2 s = vec_sub(q2, q1);
+
+    real rxs = cross(r, s);
+    real qpxr = cross(vec_sub(q1, p1), r);
+
+    // Parallel
+    if (REAL_FABS(rxs) < R(0.0001))
+    {
+        // Collinear
+        if (REAL_FABS(qpxr) < R(0.0001))
+        {
+            real rr = vec_dot(r, r);
+
+            if (rr < R(0.0001))
+                return false;
+
+            real t0 = vec_dot(vec_sub(q1, p1), r) / rr;
+            real t1 = vec_dot(vec_sub(q2, p1), r) / rr;
+
+            if (t0 > t1)
+            {
+                real tmp = t0;
+                t0 = t1;
+                t1 = tmp;
+            }
+
+            return t0 <= R(1.0) && t1 >= R(0.0);
+        }
+
+        return false;
+    }
+
+    real t = cross(vec_sub(q1, p1), s) / rxs;
+    real u = cross(vec_sub(q1, p1), r) / rxs;
+
+    return
+        t >= R(0.0) &&
+        t <= R(1.0) &&
+        u >= R(0.0) &&
+        u <= R(1.0);
+}

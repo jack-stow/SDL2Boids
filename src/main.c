@@ -7,6 +7,7 @@
 #include "boid.h"
 #include "flockbehavior.h"
 #include "poi.h"
+#include "obstacles.h"
 
 
 App    app;
@@ -202,6 +203,7 @@ int main(int argc, char* argv[])
 		.matchingFactor = R(MATCHING_FACTOR),
 		.centeringFactor = R(CENTERING_FACTOR),
 		.borderingFactor = R(BORDERING_FACTOR),
+		.obstacleAvoidFactor = R(OBSTACLE_AVOID_FACTOR),
 
 		.maxVisible = MAX_VISIBLE,
 		.visionRadius = R(VISION_RADIUS),
@@ -210,6 +212,8 @@ int main(int argc, char* argv[])
 		.protectedRangeSq = R(PROTECTED_RANGE) * R(PROTECTED_RANGE),
 
 		.poiFactor = R(POI_FACTOR),
+
+		.obstacleAvoidDistance = R(OBSTACLE_AVOID_DISTANCE),
 
 		.texture = loadTexture(BOID_TEXTURE)
 	};
@@ -246,6 +250,22 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
+	Obstacles* obstacles = malloc(sizeof(Obstacles));
+
+	if (obstacles == NULL)
+	{
+		SDL_Log("Failed to allocate obstacles");
+		exit(1);
+	}
+	obstacles->x1 = 0.0;
+	obstacles->y1 = 0.0;
+	obstacles->x2 = 0.0;
+	obstacles->y2 = 0.0;
+	obstacles->next = NULL;
+
+
+	Obstacles* nextObstacle = obstacles;
+
 	int poiCount = NUM_POI;
 	PointOfInterest* pointsOfInterest = malloc(sizeof(PointOfInterest) * poiCount);
 
@@ -272,7 +292,7 @@ int main(int argc, char* argv[])
 	int flockCallCount = 0;
 	double statsTimer = 0.0;
 
-	Color poiColor = { 0, 255, 0, 255 };
+	DrawColor poiColor = { 0, 255, 0, 255 };
 
 
 	// Statistics
@@ -333,6 +353,8 @@ int main(int argc, char* argv[])
 		);
 	}
 
+	bool drawingLine = false;
+	bool erasingLine = false;
 
 	while (1)
 	{
@@ -370,6 +392,7 @@ int main(int argc, char* argv[])
 				boids,
 				boidsNext,
 				&grid,
+				obstacles,
 				&sim,
 				pointsOfInterest,
 				poiCount,
@@ -409,9 +432,55 @@ int main(int argc, char* argv[])
 			//poipoi_draw(&pointsOfInterest[i], poiColor);
 		}
 
-		//draw_circle(boids[0].x, boids[0].y, sim.visionRadius, (Color) { 255, 0, 255, 255 }, false);
+		//draw_circle(boids[0].x, boids[0].y, sim.visionRadius, (DrawColor) { 255, 0, 255, 255 }, false);
 
-		//draw_circle(boids[0].x, boids[0].y, sim.protectedRange, (Color) {255, 0, 255, 255}, false);
+		//draw_circle(boids[0].x, boids[0].y, sim.protectedRange, (DrawColor) {255, 0, 255, 255}, false);
+
+		
+
+		// Draw line while dragging mouse, and create obstacle on mouse release
+		if (app.mouseDown) {
+			draw_line(app.dragStartX, app.dragStartY, app.mouseX, app.mouseY, (DrawColor) { 255, 255, 255, 255 });
+			drawingLine = true;
+		}
+		else if (drawingLine) {
+			nextObstacle->x1 = (real)app.dragStartX;
+			nextObstacle->y1 = (real)app.dragStartY;
+			nextObstacle->x2 = (real)app.dragEndX;
+			nextObstacle->y2 = (real)app.dragEndY;
+			nextObstacle->next = malloc(sizeof(Obstacles));
+			if (nextObstacle->next == NULL)
+			{
+				SDL_Log("Failed to allocate obstacle");
+				exit(1);
+			}
+			nextObstacle = nextObstacle->next;
+			nextObstacle->x1 = 0.0;
+			nextObstacle->y1 = 0.0;
+			nextObstacle->x2 = 0.0;
+			nextObstacle->y2 = 0.0;
+			nextObstacle->next = NULL;
+
+			//draw_line(app.dragStartX, app.dragStartY, app.dragEndX, app.dragEndY, (DrawColor) { 255, 255, 255, 255 });
+			drawingLine = false;
+		}
+
+		if (app.rmouseDown) {
+			draw_line(app.rdragStartX, app.rdragStartY, app.rmouseX, app.rmouseY, (DrawColor) { 255, 0, 0, 255 });
+			erasingLine = true;
+		}
+		if (erasingLine) {
+			Obstacles_EraseIntersecting(&obstacles,
+				(real)app.rdragStartX,
+				(real)app.rdragStartY,
+				(real)app.rmouseX,
+				(real)app.rmouseY);
+		}
+		if (!app.rmouseDown && erasingLine) {
+			erasingLine = false;
+		}
+
+		Obstacles_Draw(obstacles);
 
 		Uint64 drawEnd = SDL_GetPerformanceCounter();
 

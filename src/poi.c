@@ -28,7 +28,7 @@ PointOfInterest poi_reinitialize(PointOfInterest* poi)
 	return *poi;
 }
 
-void poi_draw(PointOfInterest* poi, Color color)
+void poi_draw(PointOfInterest* poi, DrawColor color)
 {
 	if (!poi->active)
 	{

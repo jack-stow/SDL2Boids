@@ -43,6 +43,7 @@
     <ClCompile Include="src\arena.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\obstacles.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -99,6 +100,7 @@
     <ClInclude Include="src\arena.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\obstacles.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

@@ -132,3 +132,4 @@ vec2 vec_clamp_mag(vec2 v, real minSpeed, real maxSpeed)
 
     return v;
 }
+
