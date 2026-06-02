@@ -13,7 +13,7 @@ void initSDL(void)
 
 	rendererFlags = SDL_RENDERER_ACCELERATED;
 
-	windowFlags = 0;
+	windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
