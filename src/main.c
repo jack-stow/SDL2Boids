@@ -199,6 +199,8 @@ int main(int argc, char* argv[])
 		.turnSpeed = R(TURN_SPEED),
 		.acceleration = R(ACCELERATION),
 
+		.scale = R(BOID_SCALE),
+
 		.avoidFactor = R(AVOID_FACTOR),
 		.matchingFactor = R(MATCHING_FACTOR),
 		.centeringFactor = R(CENTERING_FACTOR),
@@ -215,7 +217,8 @@ int main(int argc, char* argv[])
 
 		.obstacleAvoidDistance = R(OBSTACLE_AVOID_DISTANCE),
 
-		.texture = loadTexture(BOID_TEXTURE)
+		.texture = loadTexture(BOID_TEXTURE),
+		.boidColor = (DrawColor){255, 0, 0, 255}
 	};
 
 	int boidCount = BOID_COUNT;
@@ -243,7 +246,7 @@ int main(int argc, char* argv[])
 		&grid,
 		R(SCREEN_WIDTH),
 		R(SCREEN_HEIGHT),
-		sim.visionRadius / R(4.0),
+		sim.visionRadius / R(3.0),
 		boidCount
 	)) {
 		SDL_Log("Failed to initialize uniform grid");

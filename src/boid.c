@@ -28,5 +28,8 @@ Boid boid_create(SimulationParameters* sim)
 
 void drawBoid(Boid* boid, SimulationParameters* sim)
 {
-	blit(sim->texture, boid->x, boid->y, boid->angle, R(BOID_SCALE));
+    //blit(sim->texture, boid->x, boid->y, boid->angle, R(BOID_SCALE));
+    //draw_rect(boid->x, boid->y, sim->scale, sim->boidColor);
+    //draw_rect_fast(boid->x, boid->y, sim->scale);
+	draw_point_fast(boid->x, boid->y);
 }

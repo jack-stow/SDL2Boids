@@ -12,3 +12,7 @@ void blit(SDL_Texture* texture, real x, real y, real angle, real scale);
 SDL_Texture* loadTexture(char* filename);
 void draw_circle(real x, real y, real radius, DrawColor color, bool filled);
 void draw_line(real x1, real y1, real x2, real y2, DrawColor color);
+void draw_rect(real x, real y, real size, DrawColor color);
+void set_draw_color(DrawColor color);
+void draw_rect_fast(real x, real y, real size);
+void draw_point_fast(real x, real y);

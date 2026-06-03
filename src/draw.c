@@ -47,21 +47,11 @@ void blit(SDL_Texture* texture, real x, real y, real angle, real scale)
 
 
 	SDL_RenderCopyEx(app.renderer, texture, NULL, &dest, angle, NULL, SDL_FLIP_NONE);
+
+	//SDL_RenderCopy(app.renderer, texture, NULL, &dest);
 }
 
 
-//void draw_rect(real x, real y, real radius)
-//{
-//	SDL_Rect rect;
-//
-//	rect.w = (int)(radius * 2);
-//	rect.h = (int)(radius * 2);
-//	rect.x = (int)(x - rect.w / 2);
-//	rect.y = (int)(y - rect.h / 2);
-//
-//	SDL_SetRenderDrawColor(app.renderer, 0, 100, 255, 255);
-//	SDL_RenderFillRect(app.renderer, &rect);
-//}
 
 void draw_circle(real x, real y, real radius, DrawColor color, bool filled)
 {
@@ -103,4 +93,63 @@ void draw_line(real x1, real y1, real x2, real y2, DrawColor color)
     SDL_SetRenderDrawColor(app.renderer, color.r, color.g, color.b, color.a);
     SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
 	SDL_RenderDrawLine(app.renderer, (int)x1, (int)y1, (int)x2, (int)y2);
+}
+
+
+void draw_rect(real x, real y, real size, DrawColor color)
+{
+    SDL_SetRenderDrawColor(
+        app.renderer,
+        color.r,
+        color.g,
+        color.b,
+        color.a
+    );
+
+    int s = (int)size;
+
+    if (s < 1)
+        s = 1;
+
+    SDL_Rect rect = {
+        .x = (int)x,
+        .y = (int)y,
+        .w = s,
+        .h = s
+    };
+
+    SDL_RenderFillRect(app.renderer, &rect);
+}
+
+void set_draw_color(DrawColor color)
+{
+    SDL_SetRenderDrawColor(
+        app.renderer,
+        color.r,
+        color.g,
+        color.b,
+        color.a
+    );
+}
+
+void draw_rect_fast(real x, real y, real size)
+{
+    int s = (int)size;
+
+    if (s < 1)
+        s = 1;
+
+    SDL_Rect rect = {
+        .x = (int)x,
+        .y = (int)y,
+        .w = s,
+        .h = s
+    };
+
+    SDL_RenderFillRect(app.renderer, &rect);
+}
+
+void draw_point_fast(real x, real y)
+{
+    SDL_RenderDrawPoint(app.renderer, (int)x, (int)y);
 }

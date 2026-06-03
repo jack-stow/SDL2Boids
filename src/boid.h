@@ -3,7 +3,7 @@
 #ifndef BOID_H
 #define BOID_H
 
-#define BOID_SCALE        (R(0.1))
+#define BOID_SCALE        (R(0.05))
 
 // Real casting macro kept to the outside because FRAME_RATE is a double.
 #define TOP_SPEED         (R(5.0 * FRAME_RATE))
@@ -12,8 +12,8 @@
 #define ACCELERATION      (R(0.1 * FRAME_RATE))
 
 #define AVOID_FACTOR      (R(1.35 * FRAME_RATE))
-#define MATCHING_FACTOR   (R(0.1 * FRAME_RATE))
-#define CENTERING_FACTOR  (R(0.1 * FRAME_RATE))
+#define MATCHING_FACTOR   (R(0.2 * FRAME_RATE))
+#define CENTERING_FACTOR  (R(0.2 * FRAME_RATE))
 #define BORDERING_FACTOR  (R(5.0 * FRAME_RATE))
 #define OBSTACLE_AVOID_FACTOR (R(50.0 * FRAME_RATE))
 
@@ -21,11 +21,11 @@
 
 #define OBSTACLE_AVOID_DISTANCE (R(10.0))
 
-#define BOID_COUNT 	      (25000)
+#define BOID_COUNT 	      (150000)
 
-#define MAX_VISIBLE       (25000)
-#define VISION_RADIUS     (R(70.0))
-#define PROTECTED_RANGE   (R(5.0))
+#define MAX_VISIBLE       (150000)
+#define VISION_RADIUS     (R(5))
+#define PROTECTED_RANGE   (R(2))
 
 
 #define BOID_TEXTURE      "gfx/boid.png"
@@ -49,6 +49,8 @@ typedef struct
 	real turnSpeed;
 	real acceleration;
 
+	real scale;
+
 	real avoidFactor;
 	real matchingFactor;
 	real centeringFactor;
@@ -65,6 +67,7 @@ typedef struct
 	real obstacleAvoidDistance;
 
 	SDL_Texture* texture;
+	DrawColor boidColor;
 
 } SimulationParameters;
 
