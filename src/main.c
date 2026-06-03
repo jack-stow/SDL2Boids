@@ -179,6 +179,42 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 gridBuildEnd, Uint
 }
 
 
+void DrawBoidsBatchedPoints(Boid* boids, int numBoids, SimulationParameters* sim)
+{
+	static SDL_Point* points = NULL;
+	static int capacity = 0;
+
+	if (numBoids > capacity)
+	{
+		SDL_Point* newPoints = realloc(points, sizeof(SDL_Point) * numBoids);
+
+		if (newPoints == NULL)
+		{
+			SDL_Log("Failed to allocate point batch");
+			return;
+		}
+
+		points = newPoints;
+		capacity = numBoids;
+	}
+
+	for (int i = 0; i < numBoids; i++)
+	{
+		points[i].x = (int)boids[i].x;
+		points[i].y = (int)boids[i].y;
+	}
+
+	SDL_SetRenderDrawColor(
+		app.renderer,
+		sim->boidColor.r,
+		sim->boidColor.g,
+		sim->boidColor.b,
+		sim->boidColor.a
+	);
+
+	SDL_RenderDrawPoints(app.renderer, points, numBoids);
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -246,7 +282,7 @@ int main(int argc, char* argv[])
 		&grid,
 		R(SCREEN_WIDTH),
 		R(SCREEN_HEIGHT),
-		sim.visionRadius / R(3.0),
+		sim.visionRadius / R(2.0),
 		boidCount
 	)) {
 		SDL_Log("Failed to initialize uniform grid");
@@ -285,7 +321,7 @@ int main(int argc, char* argv[])
 	Uint64 lastCounter = SDL_GetPerformanceCounter();
 
 	double fpsTimer = 0.0;
-	int frameCount = 0;
+	Uint64 frameCount = 0;
 
 	Uint64 updateStart = 0;
 	Uint64 updateEnd = 0;
@@ -341,6 +377,7 @@ int main(int argc, char* argv[])
 	pool.generation = 0;
 	pool.completed = 0;
 	pool.mutex = SDL_CreateMutex();
+	pool.chunkMutex = SDL_CreateMutex();
 	pool.startCond = SDL_CreateCond();
 	pool.doneCond = SDL_CreateCond();
 
@@ -350,7 +387,7 @@ int main(int argc, char* argv[])
 	{
 		threadIds[i] = i;
 		threads[i] = SDL_CreateThread(
-			PersistentWorkerMain,
+			PersistentWorkerMainBalanced,
 			threadNames[i],
 			&threadIds[i]
 		);
@@ -379,12 +416,14 @@ int main(int argc, char* argv[])
 		/*UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);*/
 
 		//UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
-		UniformGrid_Build(&grid, boids, boidCount);
+		if (frameCount % 2 == 0) {
+			UniformGrid_Build(&grid, boids, boidCount);
+		}
 
 		Uint64 gridBuildEnd = SDL_GetPerformanceCounter();
 
 
-		for (int i = 0; i < numThreads; i++)
+		/*for (int i = 0; i < numThreads; i++)
 		{
 			int start = i * boidCount / numThreads;
 			int end = (i + 1) * boidCount / numThreads;
@@ -401,7 +440,25 @@ int main(int argc, char* argv[])
 				poiCount,
 				deltaTimeReal
 			);
-		}
+
+		}*/
+
+		pool.nextChunkStart = 0;
+		pool.chunkSize = 256;   // tune: 256, 512, 1024, 2048
+		pool.boidCount = boidCount;
+
+		pool.baseJob = initFlockJob(
+			0,
+			boidCount,
+			boids,
+			boidsNext,
+			&grid,
+			obstacles,
+			&sim,
+			pointsOfInterest,
+			poiCount,
+			deltaTimeReal
+		);
 
 		SDL_LockMutex(pool.mutex);
 		pool.completed = 0;
@@ -423,7 +480,10 @@ int main(int argc, char* argv[])
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
-		DrawBoids(boids, boidCount, &sim);
+		//DrawBoids(boids, boidCount, &sim);
+		DrawBoidsBatchedPoints(boids, boidCount, &sim);
+
+		
 
 		for (size_t i = 0; i < poiCount; i++)
 		{
@@ -513,6 +573,7 @@ int main(int argc, char* argv[])
 		{
 			SDL_Delay((Uint32)((targetFrameTime - frameSeconds) * MS_PER_SECOND));
 		}
+		frameCount++;
 	}
 
 	return 0;

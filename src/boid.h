@@ -21,11 +21,11 @@
 
 #define OBSTACLE_AVOID_DISTANCE (R(10.0))
 
-#define BOID_COUNT 	      (150000)
+#define BOID_COUNT 	      (300000)
 
 #define MAX_VISIBLE       (150000)
-#define VISION_RADIUS     (R(5))
-#define PROTECTED_RANGE   (R(2))
+#define VISION_RADIUS     (R(4))
+#define PROTECTED_RANGE   (R(1))
 
 
 #define BOID_TEXTURE      "gfx/boid.png"

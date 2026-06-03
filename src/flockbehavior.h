@@ -65,10 +65,18 @@ typedef struct
     SDL_cond* startCond;
     SDL_cond* doneCond;
 
+    SDL_mutex* chunkMutex;
+
     int quit;
     int generation;
     int completed;
     int numThreads;
+
+    int nextChunkStart;
+    int chunkSize;
+    int boidCount;
+
+    FlockJob baseJob;
 
     FlockJob* jobs;
 } WorkerPool;
@@ -76,3 +84,4 @@ typedef struct
 WorkerPool pool;
 
 int PersistentWorkerMain(void* data);
+int PersistentWorkerMainBalanced(void* data);

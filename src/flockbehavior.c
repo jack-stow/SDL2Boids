@@ -506,3 +506,68 @@ int PersistentWorkerMain(void* data)
         SDL_UnlockMutex(pool.mutex);
     }
 }
+
+
+int PersistentWorkerMainBalanced(void* data)
+{
+    int threadIndex = *(int*)data;
+    int lastGeneration = 0;
+
+    while (1)
+    {
+        SDL_LockMutex(pool.mutex);
+
+        while (!pool.quit && pool.generation == lastGeneration)
+        {
+            SDL_CondWait(pool.startCond, pool.mutex);
+        }
+
+        if (pool.quit)
+        {
+            SDL_UnlockMutex(pool.mutex);
+            return 0;
+        }
+
+        lastGeneration = pool.generation;
+
+        SDL_UnlockMutex(pool.mutex);
+
+        while (1)
+        {
+            SDL_LockMutex(pool.chunkMutex);
+
+            int start = pool.nextChunkStart;
+            pool.nextChunkStart += pool.chunkSize;
+
+            SDL_UnlockMutex(pool.chunkMutex);
+
+            if (start >= pool.boidCount)
+            {
+                break;
+            }
+
+            int end = start + pool.chunkSize;
+
+            if (end > pool.boidCount)
+            {
+                end = pool.boidCount;
+            }
+
+            FlockJob job = pool.baseJob;
+            job.startIndex = start;
+            job.endIndex = end;
+
+            WorkerMain(&job);
+        }
+
+        SDL_LockMutex(pool.mutex);
+        pool.completed++;
+
+        if (pool.completed == pool.numThreads)
+        {
+            SDL_CondSignal(pool.doneCond);
+        }
+
+        SDL_UnlockMutex(pool.mutex);
+    }
+}
