@@ -2,7 +2,7 @@
 
 A high-performance boids simulation written in C using SDL2.
 
-This project started as a simple implementation of Craig Reynolds' Boids algorithm and gradually evolved into an exploration of optimization techniques including spatial partitioning, custom memory management, cache-friendly data layouts, and multithreading.
+This project began as a way to learn C and experiment with flocking behavior, but gradually evolved into an exploration of data-oriented design and performance optimization. Over time it grew to include uniform-grid spatial partitioning, arena allocation, multithreading, dynamic work scheduling, rendering optimizations, obstacle avoidance, and extensive benchmarking while scaling from a few hundred boids to hundreds of thousands of simulated agents.
 
 ![Boids simulation demo](boids.gif)
 
@@ -49,13 +49,16 @@ Test system:
 Example benchmark:
 
 ```text
-Boids: 25000
+Boids: 300,000
 FPS avg: ~60
-Update avg: ~8 ms
-Draw avg: ~2 ms
+Grid Build avg: ~3 ms
+Update avg: ~8.6 ms
+Draw avg: ~1.4 ms
 ```
 
-The simulation can maintain approximately 25,000 boids at 60 FPS on a modern desktop CPU without GPU acceleration.
+The simulation can maintain approximately 300,000 boids at 60 FPS* on a modern desktop CPU without GPU acceleration.
+
+*assuming the boids don't all cluster together in one area, which would increase neighbor search costs
 
 ---
 
@@ -101,23 +104,41 @@ to produce the final steering force.
 
 # Spatial Partitioning
 
-A naive boids implementation requires:
+A naive boids implementation is:
 
 ```text
 O(n²)
 ```
 
-neighbor comparisons.
+At 300,000 boids, a naive implementation would require:
 
-At 25,000 boids:
+90,000,000,000
 
-```text
-625,000,000
-```
+potential pair comparisons per frame.
 
-potential pair checks.
+At 60 FPS:
 
-This quickly becomes impractical.
+5,400,000,000,000
+
+potential comparisons per second.
+
+Even under an unrealistically optimistic model:
+
+- 16 CPU cores
+- 5 GHz clock speed
+- 6 instructions retired per cycle
+- One boid comparison completed in a single instruction
+- Perfect cache behavior
+- No memory stalls
+
+The theoretical maximum throughput would be:
+
+16 × 5,000,000,000 × 6
+≈ 480,000,000,000 instructions/second
+
+This is still more than an order of magnitude below the work required by a naive O(n²) implementation. 
+In practice, a boid comparison requires many instructions and multiple memory accesses, making the gap even larger. 
+The purpose of the uniform grid was therefore not to make the simulation faster, it was to make it computationally feasible at all.
 
 To reduce the search space, the simulation uses a Uniform Grid.
 
@@ -255,14 +276,17 @@ Benefits:
 
 Boids are divided into contiguous chunks of the boid array.
 
-Each worker receives a subset of boids to update:
+Workers pull chunks from a shared work queue.
 
 ```text
-Worker 0: 0 - 6249
-Worker 1: 6250 - 12499
-Worker 2: 12500 - 18749
-Worker 3: 18750 - 24999
+Worker 0: grabs next chunk
+Worker 1: grabs next chunk
+Worker 2: grabs next chunk
+...
 ```
+When a worker finishes a chunk, it immediately claims another until all boids have been processed.
+
+This improved load balancing and reduced the impact of uneven boid distributions.
 
 Worker results are synchronized using SDL mutexes and condition variables.
 
@@ -341,13 +365,19 @@ This optimization alone enabled simulations that would otherwise be impractical.
 
 Grid size has a significant impact on performance.
 
-Testing showed that cells smaller than the vision radius often performed better because fewer irrelevant boids were examined.
+Testing showed that no single cell size is universally optimal.
 
-One of the best-performing configurations was:
+Smaller cells reduce the number of boids examined during neighbor searches but increase:
 
-```text
-cellSize = visionRadius / 4
-```
+- Grid construction cost
+- Number of queried cells
+- Memory traffic
+
+At large vision radii, smaller cells often performed best.
+
+At high boid counts with small vision radii, larger cells became more efficient because grid construction overhead became a significant portion of frame time.
+
+The optimal cell size depends on both boid density and query radius.
 
 ---
 
@@ -364,6 +394,68 @@ The simulation was already dominated by neighbor search cost rather than memory 
 Increasing thread count improved performance only when enough boids were present.
 
 Small simulations often ran faster with fewer threads due to synchronization overhead.
+
+---
+
+## Rendering Optimizations
+
+Initially, each boid was rendered using SDL_RenderCopyEx with a rotated sprite.
+
+As boid counts increased, rendering became a significant bottleneck.
+
+Several rendering approaches were tested:
+
+| Method | Result |
+|----------|----------|
+| Rotated sprite | Slowest |
+| Unrotated sprite | ~1 ms improvement |
+| Filled rectangles | Small improvement |
+| SDL_RenderDrawPoint | Large improvement |
+| SDL_RenderDrawPoints (batched) | Fastest |
+
+The final implementation batches all visible boids into a single SDL_Point array and renders them using SDL_RenderDrawPoints.
+
+At 150,000 boids this reduced average draw time from several milliseconds to well under 1 millisecond.
+
+---
+
+## Stale Grid Experiments
+
+The simulation was modified to rebuild the uniform grid less frequently.
+
+Configurations tested:
+
+- Every frame
+- Every other frame
+- Every fourth frame
+
+Reducing rebuild frequency substantially reduced grid construction cost.
+
+However, stale spatial data eventually produced visible artifacts.
+
+Updating every other frame appeared mostly acceptable, while updating every fourth frame introduced noticeable visual stuttering despite significantly better benchmark numbers.
+
+This demonstrated that benchmark improvements do not always translate into better perceived simulation quality.
+
+---
+
+## Batching Matters More Than Expected
+
+Switching from individual SDL draw calls to SDL_RenderDrawPoints dramatically reduced rendering cost.
+
+At high boid counts, rendering became one of the largest bottlenecks in the simulation.
+
+Batching transformed rendering from a major cost into a relatively minor one.
+
+---
+
+## Dynamic Work Scheduling
+
+Dynamic chunk scheduling outperformed fixed worker assignments.
+
+Smaller chunk sizes generally produced better average frame times because they improved load balancing between worker threads.
+
+Larger chunk sizes sometimes produced more consistent worst-case timings, suggesting a tradeoff between throughput and frame-time stability.
 
 ---
 
@@ -394,27 +486,3 @@ Run:
 ```bash
 Release/Boids.exe
 ```
-
----
-
-# Future Work
-
-Potential future directions:
-
-* Obstacle line-of-sight
-* Dynamic work scheduling
-* SIMD optimization
-* GPU compute shader implementation
-* Flow fields
-* RTS-style crowd movement
-* Spatial partitioning for obstacles
-* Full data-oriented rewrite
-
----
-
-# References
-
-* Craig Reynolds, "Boids"
-* Data-Oriented Design
-* SDL2
-* Uniform Grid Spatial Partitioning
