@@ -98,25 +98,38 @@ void Obstacles_EraseIntersecting(Obstacles** obstacles, real x1, real y1, real x
 {
 	if (obstacles == NULL || *obstacles == NULL) return;
 
-	Obstacles* next = *obstacles;
-	Obstacles* prev = NULL;
+	Obstacles* current = *obstacles;
+	Obstacles* previous = NULL;
 
-	while (next != NULL) {
-		Obstacles* after = next->next;
+	while (current != NULL)
+	{
+		// Use vec2 for line_segments_intersect as required by its signature
+		vec2 a1 = { x1, y1 };
+		vec2 a2 = { x2, y2 };
+		vec2 b1 = { current->x1, current->y1 };
+		vec2 b2 = { current->x2, current->y2 };
 
-		if (Obstacle_IntersectsLine(next, x1, y1, x2, y2)) {
-			if (prev == NULL) {
-				*obstacles = after;
+		if (line_segments_intersect(a1, a2, b1, b2))
+		{
+			Obstacles* toDelete = current;
+
+			if (previous == NULL)
+			{
+				*obstacles = current->next;
+				current = *obstacles;
 			}
-			else {
-				prev->next = after;
+			else
+			{
+				previous->next = current->next;
+				current = current->next;
 			}
 
-			free(next);
-			return;
+			free(toDelete);
 		}
-
-		prev = next;
-		next = after;
+		else
+		{
+			previous = current;
+			current = current->next;
+		}
 	}
 }

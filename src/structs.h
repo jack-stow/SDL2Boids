@@ -9,15 +9,17 @@ typedef struct {
     int up, down, left, right;
 
     int mouseDown;
-    int mouseX, mouseY;
+    double mouseX, mouseY;
 
-    int dragStartX, dragStartY;
-    int dragEndX, dragEndY;
+    double dragStartX, dragStartY;
+    double dragEndX, dragEndY;
 
     int rmouseDown;
-    int rmouseX, rmouseY;
+    double rmouseX, rmouseY;
 
-    int rdragStartX, rdragStartY;
-    int rdragEndX, rdragEndY;
+    double prevRMouseX, prevRMouseY;
+
+    double rdragStartX, rdragStartY;
+    double rdragEndX, rdragEndY;
 } App;
 #endif

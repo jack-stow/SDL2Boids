@@ -289,18 +289,8 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	Obstacles* obstacles = malloc(sizeof(Obstacles));
+	Obstacles* obstacles = NULL;// malloc(sizeof(Obstacles));
 
-	if (obstacles == NULL)
-	{
-		SDL_Log("Failed to allocate obstacles");
-		exit(1);
-	}
-	obstacles->x1 = 0.0;
-	obstacles->y1 = 0.0;
-	obstacles->x2 = 0.0;
-	obstacles->y2 = 0.0;
-	obstacles->next = NULL;
 
 
 	Obstacles* nextObstacle = obstacles;
@@ -501,45 +491,52 @@ int main(int argc, char* argv[])
 
 		
 
-		// Draw line while dragging mouse, and create obstacle on mouse release
-		if (app.mouseDown) {
-			draw_line(app.dragStartX, app.dragStartY, app.mouseX, app.mouseY, (DrawColor) { 255, 255, 255, 255 });
+		// Draw line while dragging left mouse, create obstacle on release
+		if (app.mouseDown)
+		{
+			draw_line(app.dragStartX, app.dragStartY,
+				app.mouseX, app.mouseY,
+				(DrawColor) {
+				255, 255, 255, 255
+			});
+
 			drawingLine = true;
 		}
-		else if (drawingLine) {
-			nextObstacle->x1 = (real)app.dragStartX;
-			nextObstacle->y1 = (real)app.dragStartY;
-			nextObstacle->x2 = (real)app.dragEndX;
-			nextObstacle->y2 = (real)app.dragEndY;
-			nextObstacle->next = malloc(sizeof(Obstacles));
-			if (nextObstacle->next == NULL)
-			{
-				SDL_Log("Failed to allocate obstacle");
-				exit(1);
-			}
-			nextObstacle = nextObstacle->next;
-			nextObstacle->x1 = 0.0;
-			nextObstacle->y1 = 0.0;
-			nextObstacle->x2 = 0.0;
-			nextObstacle->y2 = 0.0;
-			nextObstacle->next = NULL;
+		else if (drawingLine)
+		{
+			Obstacles_Add(&obstacles,
+				(real)app.dragStartX,
+				(real)app.dragStartY,
+				(real)app.dragEndX,
+				(real)app.dragEndY);
 
-			//draw_line(app.dragStartX, app.dragStartY, app.dragEndX, app.dragEndY, (DrawColor) { 255, 255, 255, 255 });
 			drawingLine = false;
 		}
 
-		if (app.rmouseDown) {
-			draw_line(app.rdragStartX, app.rdragStartY, app.rmouseX, app.rmouseY, (DrawColor) { 255, 0, 0, 255 });
-			erasingLine = true;
-		}
-		if (erasingLine) {
+		// Draw erase line while dragging right mouse, erase on release
+		// Paint-style eraser: erase anything crossed by the right-mouse movement path
+		if (app.rmouseDown)
+		{
+			draw_line(app.prevRMouseX, app.prevRMouseY,
+				app.rmouseX, app.rmouseY,
+				(DrawColor) {
+				255, 0, 0, 255
+			});
+
 			Obstacles_EraseIntersecting(&obstacles,
-				(real)app.rdragStartX,
-				(real)app.rdragStartY,
+				(real)app.prevRMouseX,
+				(real)app.prevRMouseY,
 				(real)app.rmouseX,
 				(real)app.rmouseY);
 		}
-		if (!app.rmouseDown && erasingLine) {
+		else if (erasingLine)
+		{
+			Obstacles_EraseIntersecting(&obstacles,
+				(real)app.rdragStartX,
+				(real)app.rdragStartY,
+				(real)app.rdragEndX,
+				(real)app.rdragEndY);
+
 			erasingLine = false;
 		}
 

@@ -62,13 +62,17 @@ static void doMouseButtonDown(SDL_MouseButtonEvent* event)
 		app.mouseDown = 1;
 		app.dragStartX = event->x;
 		app.dragStartY = event->y;
-		/*app.mouseX = event->x;
-		app.mouseY = event->y;*/
+		app.mouseX = event->x;
+		app.mouseY = event->y;
 	}
 	if (event->button == SDL_BUTTON_RIGHT) {
 		app.rmouseDown = 1;
 		app.rdragStartX = event->x;
 		app.rdragStartY = event->y;
+		app.rmouseX = event->x;
+		app.rmouseY = event->y;
+		app.prevRMouseX = event->x;
+		app.prevRMouseY = event->y;
 	}
 }
 
@@ -117,8 +121,13 @@ void doInput(void)
 			case SDL_MOUSEMOTION:
 				app.mouseX = event.motion.x;
 				app.mouseY = event.motion.y;
+
+				app.prevRMouseX = app.rmouseX;
+				app.prevRMouseY = app.rmouseY;
+
 				app.rmouseX = event.motion.x;
 				app.rmouseY = event.motion.y;
+
 				break;
 
 			default:
