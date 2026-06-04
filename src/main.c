@@ -8,10 +8,12 @@
 #include "flockbehavior.h"
 #include "poi.h"
 #include "obstacles.h"
+#include "camera.h"
 
 
 App    app;
 Stats stats;
+Camera camera;
 
 
 void displayFPS(double fps)
@@ -179,7 +181,7 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 gridBuildEnd, Uint
 }
 
 
-void DrawBoidsBatchedPoints(Boid* boids, int numBoids, SimulationParameters* sim)
+void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim)
 {
 	static SDL_Point* points = NULL;
 	static int capacity = 0;
@@ -200,8 +202,10 @@ void DrawBoidsBatchedPoints(Boid* boids, int numBoids, SimulationParameters* sim
 
 	for (int i = 0; i < numBoids; i++)
 	{
-		points[i].x = (int)boids[i].x;
-		points[i].y = (int)boids[i].y;
+		vec2 screen = WorldToScreen(camera, (vec2) { boids[i].x, boids[i].y });
+
+		points[i].x = (int)screen.x;
+		points[i].y = (int)screen.y;
 	}
 
 	SDL_SetRenderDrawColor(
@@ -215,6 +219,75 @@ void DrawBoidsBatchedPoints(Boid* boids, int numBoids, SimulationParameters* sim
 	SDL_RenderDrawPoints(app.renderer, points, numBoids);
 }
 
+vec2 GetCameraInputDirection()
+{
+	vec2 dir = { 0, 0 };
+	if (app.up) dir.y -= 1;
+	if (app.down) dir.y += 1;
+	if (app.left) dir.x -= 1;
+	if (app.right) dir.x += 1;
+	return vec_norm(dir);
+}
+
+void DrawBorders() {
+
+	vec2 topLeft = WorldToScreen(&camera, (vec2) { 0, 0 });
+	vec2 topRight = WorldToScreen(&camera, (vec2) { R(SCREEN_WIDTH), 0 });
+	vec2 bottomLeft = WorldToScreen(&camera, (vec2) { 0, R(SCREEN_HEIGHT) });
+	vec2 bottomRight = WorldToScreen(&camera, (vec2) { R(SCREEN_WIDTH), R(SCREEN_HEIGHT) });
+
+
+
+	draw_line(topLeft.x, topLeft.y, topRight.x, topRight.y, (DrawColor) {255, 255, 255, 255});
+	draw_line(topRight.x, topRight.y, bottomRight.x, bottomRight.y, (DrawColor) {255, 255, 255, 255});
+	draw_line(bottomRight.x, bottomRight.y, bottomLeft.x, bottomLeft.y, (DrawColor) {255, 255, 255, 255});
+	draw_line(bottomLeft.x, bottomLeft.y, topLeft.x, topLeft.y, (DrawColor) {255, 255, 255, 255});
+}
+
+void HandleObstacleInput(Obstacles** obstacles)
+{
+	static bool drawingLine = false;
+	vec2 mouseWorldPos = ScreenToWorld(&camera, (vec2) { app.mouseX, app.mouseY });
+	vec2 dragStartWorldPos = ScreenToWorld(&camera, (vec2) { app.dragStartX, app.dragStartY });
+	vec2 dragEndWorldPos = ScreenToWorld(&camera, (vec2) { app.dragEndX, app.dragEndY });
+	vec2 rMouseWorldPos = ScreenToWorld(&camera, (vec2) { app.rmouseX, app.rmouseY });
+	vec2 prevRMouseWorldPos = ScreenToWorld(&camera, (vec2) { app.prevRMouseX, app.prevRMouseY });
+
+	if (app.mouseDown)
+	{
+		draw_line(app.dragStartX, app.dragStartY,
+			app.mouseX, app.mouseY,
+			(DrawColor) {
+			255, 255, 255, 255
+		});
+
+		drawingLine = true;
+	}
+	else if (drawingLine)
+	{
+		Obstacles_Add(obstacles,
+			(real)dragStartWorldPos.x,
+			(real)dragStartWorldPos.y,
+			(real)dragEndWorldPos.x,
+			(real)dragEndWorldPos.y);
+		drawingLine = false;
+	}
+
+	if (app.rmouseDown)
+	{
+		draw_line(app.prevRMouseX, app.prevRMouseY,
+			app.rmouseX, app.rmouseY,
+			(DrawColor) {
+			255, 0, 0, 255
+		});
+
+		Obstacles_EraseIntersecting(obstacles,
+			prevRMouseWorldPos.x,
+			prevRMouseWorldPos.y,
+			rMouseWorldPos.x,
+			rMouseWorldPos.y);
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -227,6 +300,11 @@ int main(int argc, char* argv[])
 	real posX = 100.0;
 	real posY = 100.0;
 
+	camera.x = 0;
+	camera.y = 0;
+	camera.zoom = 1.0;
+	camera.screenW = SCREEN_WIDTH;
+	camera.screenH = SCREEN_HEIGHT;
 
 	SimulationParameters sim = {
 
@@ -383,8 +461,6 @@ int main(int argc, char* argv[])
 		);
 	}
 
-	bool drawingLine = false;
-	bool erasingLine = false;
 
 	while (1)
 	{
@@ -470,9 +546,14 @@ int main(int argc, char* argv[])
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
-		//DrawBoids(boids, boidCount, &sim);
-		DrawBoidsBatchedPoints(boids, boidCount, &sim);
 
+		vec2 cameraInputDir = GetCameraInputDirection();
+		camera.x += cameraInputDir.x * CAMERA_SPEED * deltaTime;
+		camera.y += cameraInputDir.y * CAMERA_SPEED * deltaTime;
+
+		//DrawBoids(boids, boidCount, &sim);
+		DrawBoidsBatchedPoints(&camera, boids, boidCount, &sim);
+		
 		
 
 		for (size_t i = 0; i < poiCount; i++)
@@ -489,58 +570,13 @@ int main(int argc, char* argv[])
 
 		//draw_circle(boids[0].x, boids[0].y, sim.protectedRange, (DrawColor) {255, 0, 255, 255}, false);
 
-		
+		HandleObstacleInput(&obstacles);
 
 		// Draw line while dragging left mouse, create obstacle on release
-		if (app.mouseDown)
-		{
-			draw_line(app.dragStartX, app.dragStartY,
-				app.mouseX, app.mouseY,
-				(DrawColor) {
-				255, 255, 255, 255
-			});
+		
 
-			drawingLine = true;
-		}
-		else if (drawingLine)
-		{
-			Obstacles_Add(&obstacles,
-				(real)app.dragStartX,
-				(real)app.dragStartY,
-				(real)app.dragEndX,
-				(real)app.dragEndY);
-
-			drawingLine = false;
-		}
-
-		// Draw erase line while dragging right mouse, erase on release
-		// Paint-style eraser: erase anything crossed by the right-mouse movement path
-		if (app.rmouseDown)
-		{
-			draw_line(app.prevRMouseX, app.prevRMouseY,
-				app.rmouseX, app.rmouseY,
-				(DrawColor) {
-				255, 0, 0, 255
-			});
-
-			Obstacles_EraseIntersecting(&obstacles,
-				(real)app.prevRMouseX,
-				(real)app.prevRMouseY,
-				(real)app.rmouseX,
-				(real)app.rmouseY);
-		}
-		else if (erasingLine)
-		{
-			Obstacles_EraseIntersecting(&obstacles,
-				(real)app.rdragStartX,
-				(real)app.rdragStartY,
-				(real)app.rdragEndX,
-				(real)app.rdragEndY);
-
-			erasingLine = false;
-		}
-
-		Obstacles_Draw(obstacles);
+		DrawBorders();
+		Obstacles_Draw(&camera, obstacles);
 
 		Uint64 drawEnd = SDL_GetPerformanceCounter();
 

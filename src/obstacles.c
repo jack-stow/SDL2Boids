@@ -60,13 +60,15 @@ void Obstacles_RemoveOne(Obstacles* obstacles, Obstacles* toRemove)
 	}
 }
 
-void Obstacles_Draw(Obstacles* obstacles)
+void Obstacles_Draw(Camera* camera, Obstacles* obstacles)
 {
 	if (obstacles == NULL) return;
 	Obstacles* next = obstacles;
 	DrawColor color = {255, 255, 255, 255};
 	while (next != NULL) {
-		draw_line(next->x1, next->y1, next->x2, next->y2, color);
+		vec2 screenPos1 = WorldToScreen(camera, (vec2) { next->x1, next->y1 });
+		vec2 screenPos2 = WorldToScreen(camera, (vec2) { next->x2, next->y2 });
+		draw_line(screenPos1.x, screenPos1.y, screenPos2.x, screenPos2.y, color);
 		next = next->next;
 	}
 }

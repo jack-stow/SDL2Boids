@@ -22,6 +22,7 @@
     <ClCompile Include="src\arena.c" />
     <ClCompile Include="src\boid.c" />
     <ClCompile Include="src\boidSOA.c" />
+    <ClCompile Include="src\camera.c" />
     <ClCompile Include="src\common.c" />
     <ClCompile Include="src\draw.c" />
     <ClCompile Include="src\flockbehavior.c" />
@@ -39,6 +40,7 @@
     <ClInclude Include="src\arena.h" />
     <ClInclude Include="src\boid.h" />
     <ClInclude Include="src\boidSOA.h" />
+    <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\constants.h" />
     <ClInclude Include="src\defs.h" />

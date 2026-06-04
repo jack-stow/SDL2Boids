@@ -69,10 +69,6 @@ static void doMouseButtonDown(SDL_MouseButtonEvent* event)
 		app.rmouseDown = 1;
 		app.rdragStartX = event->x;
 		app.rdragStartY = event->y;
-		app.rmouseX = event->x;
-		app.rmouseY = event->y;
-		app.prevRMouseX = event->x;
-		app.prevRMouseY = event->y;
 	}
 }
 

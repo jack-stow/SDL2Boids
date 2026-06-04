@@ -1,10 +1,10 @@
 #include "flockbehavior.h"
 
-void DrawBoids(Boid* boids, int numBoids, SimulationParameters* sim) {
+void DrawBoids(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim) {
     set_draw_color((DrawColor) { 255, 0, 0, 255 });
 	for (size_t i = 0; i < numBoids; i++)
 	{
-		drawBoid(&boids[i], sim);
+		drawBoid(camera, &boids[i], sim);
 	}
 }
 

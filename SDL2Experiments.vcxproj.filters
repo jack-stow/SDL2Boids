@@ -44,6 +44,7 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\obstacles.c" />
+    <ClCompile Include="src\camera.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -101,6 +102,7 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\obstacles.h" />
+    <ClInclude Include="src\camera.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

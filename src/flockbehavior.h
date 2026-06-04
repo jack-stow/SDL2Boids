@@ -2,6 +2,7 @@
 #include "poi.h"
 #include "uniformgrid.h"
 #include "obstacles.h"
+#include "camera.h"
 
 typedef struct
 {
@@ -33,7 +34,7 @@ vec2 AvoidBorders(Boid* boid, real borderMargin);
 
 vec2 AvoidObstacle(Boid* boid, Obstacles* obstacle, real avoidDistance);
 
-void DrawBoids(Boid* boids, int numBoids, SimulationParameters* sim);
+void DrawBoids(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim);
 void UpdateBoids(Boid* boids, int numBoids, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime);
 
 void UpdateBoidsGrid(

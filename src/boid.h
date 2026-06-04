@@ -1,4 +1,5 @@
 #include "common.h"
+#include "camera.h"
 
 #ifndef BOID_H
 #define BOID_H
@@ -74,7 +75,7 @@ typedef struct
 Boid boid_create(SimulationParameters* sim);
 
 
-void drawBoid(Boid* boid, SimulationParameters* sim);
+void drawBoid(Camera* camera, Boid* boid, SimulationParameters* sim);
 
 
 #endif

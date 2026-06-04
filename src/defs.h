@@ -2,6 +2,7 @@
 #define SCREEN_WIDTH  1600
 #define SCREEN_HEIGHT 900
 
+#define CAMERA_SPEED 300.0
 
 #define BORDER_MARGIN 48.0
 
