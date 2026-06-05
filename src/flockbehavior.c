@@ -18,12 +18,11 @@ void UpdateBoids(Boid* boids, int numBoids, SimulationParameters* sim, PointOfIn
         boids[i].y += boids[i].speed.y * deltaTime;
 
 
-        if (boids[i].x < 0) boids[i].x += SCREEN_WIDTH;
-        if (boids[i].x > SCREEN_WIDTH) boids[i].x -= SCREEN_WIDTH;
+        if (boids[i].x < 0) boids[i].x += WORLD_WIDTH;
+        if (boids[i].x > WORLD_WIDTH) boids[i].x -= WORLD_WIDTH;
 
-        if (boids[i].y < 0) boids[i].y += SCREEN_HEIGHT;
-        if (boids[i].y > SCREEN_HEIGHT) boids[i].y -= SCREEN_HEIGHT;
-
+        if (boids[i].y < 0) boids[i].y += WORLD_HEIGHT;
+        if (boids[i].y > WORLD_HEIGHT) boids[i].y -= WORLD_HEIGHT;
     }
 }
 
@@ -40,11 +39,11 @@ void UpdateBoidsGrid(Boid* boids, int numBoids, UniformGrid* grid, SimulationPar
         boids[i].x += boids[i].speed.x * deltaTime;
         boids[i].y += boids[i].speed.y * deltaTime;
 
-        if (boids[i].x < 0) boids[i].x += SCREEN_WIDTH;
-        if (boids[i].x > SCREEN_WIDTH) boids[i].x -= SCREEN_WIDTH;
+        if (boids[i].x < 0) boids[i].x += WORLD_WIDTH;
+        if (boids[i].x > WORLD_WIDTH) boids[i].x -= WORLD_WIDTH;
 
-        if (boids[i].y < 0) boids[i].y += SCREEN_HEIGHT;
-        if (boids[i].y > SCREEN_HEIGHT) boids[i].y -= SCREEN_HEIGHT;
+        if (boids[i].y < 0) boids[i].y += WORLD_HEIGHT;
+        if (boids[i].y > WORLD_HEIGHT) boids[i].y -= WORLD_HEIGHT;
     }
 }
 
@@ -337,25 +336,25 @@ vec2 AvoidBorders(Boid* boid, real borderMargin)
 {
     vec2 force = { 0, 0 };
 
-    if (boid->x < borderMargin)
+    if (boid->x < BORDER_MARGIN)
     {
-        real t = (borderMargin - boid->x) / borderMargin;
+        real t = (BORDER_MARGIN - boid->x) / borderMargin;
         force.x += t * t;
     }
-    else if (boid->x > SCREEN_WIDTH - borderMargin)
+    else if (boid->x > WORLD_WIDTH - BORDER_MARGIN)
     {
-        real t = (boid->x - (SCREEN_WIDTH - borderMargin)) / borderMargin;
+        real t = (boid->x - (WORLD_WIDTH - BORDER_MARGIN)) / borderMargin;
         force.x -= t * t;
     }
 
-    if (boid->y < borderMargin)
+    if (boid->y < BORDER_MARGIN)
     {
-        real t = (borderMargin - boid->y) / borderMargin;
+        real t = (BORDER_MARGIN - boid->y) / borderMargin;
         force.y += t * t;
     }
-    else if (boid->y > SCREEN_HEIGHT - borderMargin)
+    else if (boid->y > WORLD_HEIGHT - BORDER_MARGIN)
     {
-        real t = (boid->y - (SCREEN_HEIGHT - borderMargin)) / borderMargin;
+        real t = (boid->y - (WORLD_HEIGHT - BORDER_MARGIN)) / borderMargin;
         force.y -= t * t;
     }
 
@@ -455,12 +454,11 @@ int WorkerMain(void* data)
         updated.x += updated.speed.x * job->deltaTime;
         updated.y += updated.speed.y * job->deltaTime;
 
-        if (updated.x < 0) updated.x += SCREEN_WIDTH;
-        if (updated.x > SCREEN_WIDTH) updated.x -= SCREEN_WIDTH;
+        if (updated.x < 0) updated.x += WORLD_WIDTH;
+        if (updated.x > WORLD_WIDTH) updated.x -= WORLD_WIDTH;
 
-        if (updated.y < 0) updated.y += SCREEN_HEIGHT;
-        if (updated.y > SCREEN_HEIGHT) updated.y -= SCREEN_HEIGHT;
-
+        if (updated.y < 0) updated.y += WORLD_HEIGHT;
+        if (updated.y > WORLD_HEIGHT) updated.y -= WORLD_HEIGHT;
         job->next[i] = updated;
     }
 

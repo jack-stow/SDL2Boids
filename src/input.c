@@ -88,6 +88,7 @@ static void doMouseButtonUp(SDL_MouseButtonEvent* event)
 
 void doInput(void)
 {
+	app.mouseWheelY = 0;
 	SDL_Event event;
 
 	while (SDL_PollEvent(&event))
@@ -124,6 +125,10 @@ void doInput(void)
 				app.rmouseX = event.motion.x;
 				app.rmouseY = event.motion.y;
 
+				break;
+
+			case SDL_MOUSEWHEEL:
+				app.mouseWheelY += event.wheel.y;
 				break;
 
 			default:

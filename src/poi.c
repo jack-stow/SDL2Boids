@@ -4,8 +4,8 @@
 PointOfInterest poi_create_random(void)
 {
 	PointOfInterest poi;
-	poi.x = rand_range_real(BORDER_MARGIN, SCREEN_WIDTH - BORDER_MARGIN);
-	poi.y = rand_range_real(BORDER_MARGIN, SCREEN_HEIGHT - BORDER_MARGIN);
+	poi.x = rand_range_real(BORDER_MARGIN, WORLD_WIDTH - BORDER_MARGIN);
+	poi.y = rand_range_real(BORDER_MARGIN, WORLD_HEIGHT - BORDER_MARGIN);
 	poi.attractionRadius = POI_ATTRACTION_RADIUS;
 	poi.attractionRadiusSq = POI_ATTRACTION_RADIUS * POI_ATTRACTION_RADIUS;
 	poi.radius = POI_CONSUME_RADIUS;
@@ -17,8 +17,8 @@ PointOfInterest poi_create_random(void)
 
 PointOfInterest poi_reinitialize(PointOfInterest* poi)
 {
-	poi->x = rand_range_real(BORDER_MARGIN, SCREEN_WIDTH - BORDER_MARGIN);
-	poi->y = rand_range_real(BORDER_MARGIN, SCREEN_HEIGHT - BORDER_MARGIN);
+	poi->x = rand_range_real(BORDER_MARGIN, WORLD_WIDTH - BORDER_MARGIN);
+	poi->y = rand_range_real(BORDER_MARGIN, WORLD_HEIGHT - BORDER_MARGIN);
 	poi->attractionRadius = POI_ATTRACTION_RADIUS;
 	poi->attractionRadiusSq = POI_ATTRACTION_RADIUS * POI_ATTRACTION_RADIUS;
 	poi->radius = POI_CONSUME_RADIUS;
@@ -28,15 +28,17 @@ PointOfInterest poi_reinitialize(PointOfInterest* poi)
 	return *poi;
 }
 
-void poi_draw(PointOfInterest* poi, DrawColor color)
+void poi_draw(Camera* camera, PointOfInterest* poi, DrawColor color)
 {
 	if (!poi->active)
 	{
 		return;
 	}
 	color.a = (Uint8)(color.a * ((real)poi->health / (real)POI_HEALTH));
-	draw_circle(poi->x, poi->y, poi->radius, color, false);
-	//draw_circle(poi->x, poi->y, poi->attractionRadius, color, false);
+
+	vec2 screenPos = WorldToScreen(camera, (vec2) { poi->x, poi->y });
+	draw_circle(screenPos.x, screenPos.y, poi->radius * camera->zoom, color, false);
+	//draw_circle(screenPos.x, screenPos.y, poi->attractionRadius * camera->zoom, color, false);
 }
 
 vec2 poi_get_direction_vector(PointOfInterest* poi, Boid* boid)

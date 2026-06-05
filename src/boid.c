@@ -6,8 +6,8 @@ Boid boid_create(SimulationParameters* sim)
 {
     Boid boid;
 
-    boid.x = rand_range_real(BORDER_MARGIN, SCREEN_WIDTH - BORDER_MARGIN);
-    boid.y = rand_range_real(BORDER_MARGIN, SCREEN_HEIGHT - BORDER_MARGIN);
+    boid.x = rand_range_real(BORDER_MARGIN, WORLD_WIDTH - BORDER_MARGIN);
+    boid.y = rand_range_real(BORDER_MARGIN, WORLD_HEIGHT - BORDER_MARGIN);
 
     // Random direction
     vec2 dir = {rand_range_real(R(-1.0), R(1.0)), rand_range_real(R(-1.0), R(1.0))};

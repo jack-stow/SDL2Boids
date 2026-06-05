@@ -21,5 +21,7 @@ typedef struct {
 
     double rdragStartX, rdragStartY;
     double rdragEndX, rdragEndY;
+
+    double mouseWheelY;
 } App;
 #endif

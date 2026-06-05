@@ -180,11 +180,11 @@ void UpdateStats(double deltaTime, Uint64 updateStart, Uint64 gridBuildEnd, Uint
 
 }
 
-
-void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim)
+void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim, bool rebuildPoints)
 {
 	static SDL_Point* points = NULL;
 	static int capacity = 0;
+	static int pointCount = 0;
 
 	if (numBoids > capacity)
 	{
@@ -200,12 +200,17 @@ void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, Simulatio
 		capacity = numBoids;
 	}
 
-	for (int i = 0; i < numBoids; i++)
+	if (rebuildPoints)
 	{
-		vec2 screen = WorldToScreen(camera, (vec2) { boids[i].x, boids[i].y });
+		for (int i = 0; i < numBoids; i++)
+		{
+			vec2 screen = WorldToScreen(camera, (vec2) { boids[i].x, boids[i].y });
 
-		points[i].x = (int)screen.x;
-		points[i].y = (int)screen.y;
+			points[i].x = (int)screen.x;
+			points[i].y = (int)screen.y;
+		}
+
+		pointCount = numBoids;
 	}
 
 	SDL_SetRenderDrawColor(
@@ -216,7 +221,7 @@ void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, Simulatio
 		sim->boidColor.a
 	);
 
-	SDL_RenderDrawPoints(app.renderer, points, numBoids);
+	SDL_RenderDrawPoints(app.renderer, points, pointCount);
 }
 
 vec2 GetCameraInputDirection()
@@ -232,10 +237,9 @@ vec2 GetCameraInputDirection()
 void DrawBorders() {
 
 	vec2 topLeft = WorldToScreen(&camera, (vec2) { 0, 0 });
-	vec2 topRight = WorldToScreen(&camera, (vec2) { R(SCREEN_WIDTH), 0 });
-	vec2 bottomLeft = WorldToScreen(&camera, (vec2) { 0, R(SCREEN_HEIGHT) });
-	vec2 bottomRight = WorldToScreen(&camera, (vec2) { R(SCREEN_WIDTH), R(SCREEN_HEIGHT) });
-
+	vec2 topRight = WorldToScreen(&camera, (vec2) { WORLD_WIDTH, 0 });
+	vec2 bottomLeft = WorldToScreen(&camera, (vec2) { 0, WORLD_HEIGHT });
+	vec2 bottomRight = WorldToScreen(&camera, (vec2) { WORLD_WIDTH, WORLD_HEIGHT });
 
 
 	draw_line(topLeft.x, topLeft.y, topRight.x, topRight.y, (DrawColor) {255, 255, 255, 255});
@@ -303,6 +307,8 @@ int main(int argc, char* argv[])
 	camera.x = 0;
 	camera.y = 0;
 	camera.zoom = 1.0;
+	camera.minZoom = 0.01f;
+	camera.maxZoom = 50.0f;
 	camera.screenW = SCREEN_WIDTH;
 	camera.screenH = SCREEN_HEIGHT;
 
@@ -358,9 +364,9 @@ int main(int argc, char* argv[])
 
 	if (!UniformGrid_Init(
 		&grid,
-		R(SCREEN_WIDTH),
-		R(SCREEN_HEIGHT),
-		sim.visionRadius / R(2.0),
+		R(WORLD_WIDTH),
+		R(WORLD_HEIGHT),
+		sim.visionRadius * R(2.0),
 		boidCount
 	)) {
 		SDL_Log("Failed to initialize uniform grid");
@@ -477,12 +483,26 @@ int main(int argc, char* argv[])
 		prepareScene();
 		doInput();
 
+		if (app.mouseWheelY != 0)
+		{
+			real zoomStep = 1.01f;
+			real zoomFactor = powf(zoomStep, app.mouseWheelY);
+
+			Camera_ZoomAt(
+				&camera,
+				(vec2) {
+				app.mouseX, app.mouseY
+			},
+				zoomFactor
+			);
+		}
+
 		Uint64 updateStart = SDL_GetPerformanceCounter();
 
 		/*UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);*/
 
 		//UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
-		if (frameCount % 2 == 0) {
+		if (frameCount % 16 == 0) {
 			UniformGrid_Build(&grid, boids, boidCount);
 		}
 
@@ -542,6 +562,10 @@ int main(int argc, char* argv[])
 		boids = boidsNext;
 		boidsNext = tmp;
 
+
+		//camera.x = boids[0].x - (camera.screenW / (2.0f * camera.zoom));
+		//camera.y = boids[0].y - (camera.screenH / (2.0f * camera.zoom));
+
 		//UpdateBoidsGrid(boids, boidCount, &grid, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
@@ -552,10 +576,9 @@ int main(int argc, char* argv[])
 		camera.y += cameraInputDir.y * CAMERA_SPEED * deltaTime;
 
 		//DrawBoids(boids, boidCount, &sim);
-		DrawBoidsBatchedPoints(&camera, boids, boidCount, &sim);
+		bool rebuildDrawPoints = frameCount % 2 == 0;
+		DrawBoidsBatchedPoints(&camera, boids, boidCount, &sim, rebuildDrawPoints);
 		
-		
-
 		for (size_t i = 0; i < poiCount; i++)
 		{
 			if (!pointsOfInterest[i].active)
@@ -563,18 +586,19 @@ int main(int argc, char* argv[])
 				pointsOfInterest[i] = poi_reinitialize(&pointsOfInterest[i]);
 			}
 
-			//poipoi_draw(&pointsOfInterest[i], poiColor);
+			//poi_draw(&camera, &pointsOfInterest[i], poiColor);
 		}
 
-		//draw_circle(boids[0].x, boids[0].y, sim.visionRadius, (DrawColor) { 255, 0, 255, 255 }, false);
+		vec2 screenPos = WorldToScreen(&camera, (vec2) { boids[0].x, boids[0].y });
 
-		//draw_circle(boids[0].x, boids[0].y, sim.protectedRange, (DrawColor) {255, 0, 255, 255}, false);
+		/*draw_circle(screenPos.x, screenPos.y, sim.visionRadius * camera.zoom, (DrawColor) { 255, 0, 255, 255 }, false);
+
+		draw_circle(screenPos.x, screenPos.y, sim.protectedRange * camera.zoom, (DrawColor) {255, 0, 255, 255}, false);*/
 
 		HandleObstacleInput(&obstacles);
 
-		// Draw line while dragging left mouse, create obstacle on release
-		
 
+		// Draw line while dragging left mouse, create obstacle on release
 		DrawBorders();
 		Obstacles_Draw(&camera, obstacles);
 
