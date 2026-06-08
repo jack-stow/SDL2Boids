@@ -4,29 +4,7 @@
 #include "obstacles.h"
 #include "camera.h"
 
-typedef struct
-{
-    int startIndex;
-    int endIndex;
 
-    Boid* current;
-    Boid* next;
-
-    UniformGrid* grid;
-
-	Obstacles* obstacles;
-
-    SimulationParameters* sim;
-
-    PointOfInterest* pois;
-    int poiCount;
-
-    real deltaTime;
-} FlockJob;
-
-FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* next, UniformGrid* grid, Obstacles* obstacles, SimulationParameters* sim, PointOfInterest* pois, int poiCount, real deltaTime);
-
-int WorkerMain(void* data);
 
 void Flock(Boid* boid, Boid *boids, int numBoids, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime);
 
@@ -47,6 +25,30 @@ void UpdateBoidsGrid(
     real deltaTime
 );
 
+
+typedef struct
+{
+    int startIndex;
+    int endIndex;
+
+    Boid* current;
+    Boid* next;
+
+    UniformGrid* grid;
+
+    Obstacles* obstacles;
+
+    SimulationParameters* sim;
+
+    PointOfInterest* pois;
+    int poiCount;
+
+    real deltaTime;
+} FlockJob;
+
+FlockJob initFlockJob(int startIndex, int endIndex, const Boid* current, Boid* next, UniformGrid* grid, Obstacles* obstacles, SimulationParameters* sim, PointOfInterest* pois, int poiCount, real deltaTime);
+
+
 void FlockGrid(
     int boidIndex,
     const Boid* current,
@@ -59,30 +61,5 @@ void FlockGrid(
     real deltaTime
 );
 
-
-typedef struct
-{
-    SDL_mutex* mutex;
-    SDL_cond* startCond;
-    SDL_cond* doneCond;
-
-    SDL_mutex* chunkMutex;
-
-    int quit;
-    int generation;
-    int completed;
-    int numThreads;
-
-    int nextChunkStart;
-    int chunkSize;
-    int boidCount;
-
-    FlockJob baseJob;
-
-    FlockJob* jobs;
-} WorkerPool;
-
-WorkerPool pool;
-
-int PersistentWorkerMain(void* data);
-int PersistentWorkerMainBalanced(void* data);
+int WorkerMain(void* data);
+void FlockJob_Run(void* data, int start, int end, int threadIndex);

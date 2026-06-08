@@ -1,5 +1,6 @@
 #include "flockbehavior.h"
 
+
 void DrawBoids(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim) {
     set_draw_color((DrawColor) { 255, 0, 0, 255 });
 	for (size_t i = 0; i < numBoids; i++)
@@ -465,107 +466,15 @@ int WorkerMain(void* data)
     return 0;
 }
 
-
-int PersistentWorkerMain(void* data)
+void FlockJob_Run(void* data, int start, int end, int threadIndex)
 {
-    int threadIndex = *(int*)data;
-    int lastGeneration = 0;
+    FlockJob* job = (FlockJob*)data;
 
-    while (1)
-    {
-        SDL_LockMutex(pool.mutex);
+    FlockJob chunkJob = *job;
+    chunkJob.startIndex = start;
+    chunkJob.endIndex = end;
 
-        while (!pool.quit && pool.generation == lastGeneration)
-        {
-            SDL_CondWait(pool.startCond, pool.mutex);
-        }
-
-        if (pool.quit)
-        {
-            SDL_UnlockMutex(pool.mutex);
-            return 0;
-        }
-
-        lastGeneration = pool.generation;
-        FlockJob job = pool.jobs[threadIndex];
-
-        SDL_UnlockMutex(pool.mutex);
-
-        WorkerMain(&job);
-
-        SDL_LockMutex(pool.mutex);
-        pool.completed++;
-
-        if (pool.completed == pool.numThreads)
-        {
-            SDL_CondSignal(pool.doneCond);
-        }
-
-        SDL_UnlockMutex(pool.mutex);
-    }
+    WorkerMain(&chunkJob);
 }
 
 
-int PersistentWorkerMainBalanced(void* data)
-{
-    int threadIndex = *(int*)data;
-    int lastGeneration = 0;
-
-    while (1)
-    {
-        SDL_LockMutex(pool.mutex);
-
-        while (!pool.quit && pool.generation == lastGeneration)
-        {
-            SDL_CondWait(pool.startCond, pool.mutex);
-        }
-
-        if (pool.quit)
-        {
-            SDL_UnlockMutex(pool.mutex);
-            return 0;
-        }
-
-        lastGeneration = pool.generation;
-
-        SDL_UnlockMutex(pool.mutex);
-
-        while (1)
-        {
-            SDL_LockMutex(pool.chunkMutex);
-
-            int start = pool.nextChunkStart;
-            pool.nextChunkStart += pool.chunkSize;
-
-            SDL_UnlockMutex(pool.chunkMutex);
-
-            if (start >= pool.boidCount)
-            {
-                break;
-            }
-
-            int end = start + pool.chunkSize;
-
-            if (end > pool.boidCount)
-            {
-                end = pool.boidCount;
-            }
-
-            FlockJob job = pool.baseJob;
-            job.startIndex = start;
-            job.endIndex = end;
-
-            WorkerMain(&job);
-        }
-
-        SDL_LockMutex(pool.mutex);
-        pool.completed++;
-
-        if (pool.completed == pool.numThreads)
-        {
-            SDL_CondSignal(pool.doneCond);
-        }
-
-        SDL_UnlockMutex(pool.mutex);
-    }
-}

@@ -9,6 +9,7 @@
 #include "poi.h"
 #include "obstacles.h"
 #include "camera.h"
+#include "workerpool.h"
 
 
 App    app;
@@ -293,6 +294,46 @@ void HandleObstacleInput(Obstacles** obstacles)
 	}
 }
 
+
+void RunFlockWorkers(
+	WorkerPool* workerpool,
+	UniformGrid* grid,
+	int boidCount,
+	Boid** boids,
+	Boid** boidsNext,
+	Obstacles* obstacles,
+	SimulationParameters* sim,
+	PointOfInterest* pointsOfInterest,
+	int poiCount,
+	real deltaTime
+)
+{
+	FlockJob job = initFlockJob(
+		0,
+		boidCount,
+		*boids,
+		*boidsNext,
+		grid,
+		obstacles,
+		sim,
+		pointsOfInterest,
+		poiCount,
+		deltaTime
+	);
+
+	WorkerPool_Run(
+		workerpool,
+		boidCount,
+		256,
+		FlockJob_Run,
+		&job
+	);
+
+	Boid* tmp = *boids;
+	*boids = *boidsNext;
+	*boidsNext = tmp;
+}
+
 int main(int argc, char* argv[])
 {
 	memset(&app, 0, sizeof(App));
@@ -436,7 +477,7 @@ int main(int argc, char* argv[])
 	int numThreads = SDL_GetCPUCount();
 	SDL_Thread** threads = malloc(sizeof(SDL_Thread*) * numThreads);
 	char (*threadNames)[32] = malloc(sizeof(*threadNames) * numThreads);
-	FlockJob* jobs = malloc(sizeof(FlockJob) * numThreads);
+	FlockJob* flockJobs = malloc(sizeof(FlockJob) * numThreads);
 
 	for (int i = 0; i < numThreads; i++)
 	{
@@ -445,17 +486,22 @@ int main(int argc, char* argv[])
 	}
 
 
-	pool.numThreads = numThreads;
-	pool.jobs = jobs;
-	pool.quit = 0;
-	pool.generation = 0;
-	pool.completed = 0;
-	pool.mutex = SDL_CreateMutex();
-	pool.chunkMutex = SDL_CreateMutex();
-	pool.startCond = SDL_CreateCond();
-	pool.doneCond = SDL_CreateCond();
+	workerpool.numThreads = numThreads;
+	//pool.jobs = flockJobs;
+	workerpool.quit = 0;
+	workerpool.generation = 0;
+	workerpool.completed = 0;
+	workerpool.mutex = SDL_CreateMutex();
+	workerpool.chunkMutex = SDL_CreateMutex();
+	workerpool.startCond = SDL_CreateCond();
+	workerpool.doneCond = SDL_CreateCond();
 
 	int* threadIds = malloc(sizeof(int) * numThreads);
+	if (threadIds == NULL)
+	{
+		SDL_Log("Failed to allocate threadIds");
+		exit(1);
+	}
 
 	for (int i = 0; i < numThreads; i++)
 	{
@@ -499,9 +545,6 @@ int main(int argc, char* argv[])
 
 		Uint64 updateStart = SDL_GetPerformanceCounter();
 
-		/*UpdateBoidsSOA(boids, &sim, pointsOfInterest, poiCount, deltaTimeReal);*/
-
-		//UpdateBoids(boids, boidCount, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 		if (frameCount % 16 == 0) {
 			UniformGrid_Build(&grid, boids, boidCount);
 		}
@@ -509,71 +552,25 @@ int main(int argc, char* argv[])
 		Uint64 gridBuildEnd = SDL_GetPerformanceCounter();
 
 
-		/*for (int i = 0; i < numThreads; i++)
-		{
-			int start = i * boidCount / numThreads;
-			int end = (i + 1) * boidCount / numThreads;
-
-			jobs[i] = initFlockJob(
-				start,
-				end,
-				boids,
-				boidsNext,
-				&grid,
-				obstacles,
-				&sim,
-				pointsOfInterest,
-				poiCount,
-				deltaTimeReal
-			);
-
-		}*/
-
-		pool.nextChunkStart = 0;
-		pool.chunkSize = 256;   // tune: 256, 512, 1024, 2048
-		pool.boidCount = boidCount;
-
-		pool.baseJob = initFlockJob(
-			0,
-			boidCount,
-			boids,
-			boidsNext,
+		RunFlockWorkers(
+			&workerpool,
 			&grid,
+			boidCount,
+			&boids,
+			&boidsNext,
 			obstacles,
 			&sim,
 			pointsOfInterest,
 			poiCount,
-			deltaTimeReal
+			deltaTime
 		);
-
-		SDL_LockMutex(pool.mutex);
-		pool.completed = 0;
-		pool.generation++;
-		SDL_CondBroadcast(pool.startCond);
-
-		while (pool.completed < numThreads)
-		{
-			SDL_CondWait(pool.doneCond, pool.mutex);
-		}
-
-		SDL_UnlockMutex(pool.mutex);
-
-		Boid* tmp = boids;
-		boids = boidsNext;
-		boidsNext = tmp;
-
-
-		//camera.x = boids[0].x - (camera.screenW / (2.0f * camera.zoom));
-		//camera.y = boids[0].y - (camera.screenH / (2.0f * camera.zoom));
-
-		//UpdateBoidsGrid(boids, boidCount, &grid, &sim, pointsOfInterest, poiCount, deltaTimeReal);
 
 		Uint64 updateEnd = SDL_GetPerformanceCounter();
 
 
 		vec2 cameraInputDir = GetCameraInputDirection();
-		camera.x += cameraInputDir.x * CAMERA_SPEED * deltaTime;
-		camera.y += cameraInputDir.y * CAMERA_SPEED * deltaTime;
+		camera.x += cameraInputDir.x * CAMERA_SPEED * R(deltaTime);
+		camera.y += cameraInputDir.y * CAMERA_SPEED * R(deltaTime);
 
 		//DrawBoids(boids, boidCount, &sim);
 		bool rebuildDrawPoints = frameCount % 2 == 0;

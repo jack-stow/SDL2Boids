@@ -72,6 +72,17 @@ typedef struct GridQuery
 } GridQuery;
 
 
+typedef struct
+{
+    UniformGrid* grid;
+    Boid* boids;
+    int* localCounts;
+    int cellCount;
+} GridCountJobData;
+
+void RunGridCountJob(void* data, int start, int end, int threadIndex);
+
+
 /*
 ===============================================================================
     LIFECYCLE
@@ -132,6 +143,7 @@ void UniformGrid_Clear(UniformGrid* grid);
         0 on failure
 */
 int UniformGrid_Build(UniformGrid* grid, const Boid* boids, int boidCount);
+
 
 
 /*
