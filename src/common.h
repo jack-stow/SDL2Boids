@@ -27,39 +27,3 @@
 real angle_lerp(real a, real b, real t);
 real normalize_angle(real a);
 real rand_range_real(real min, real max);
-
-typedef struct
-{
-    double runTime;
-
-    double minFps;
-    double maxFps;
-    double fpsSum;
-    int fpsSamples;
-
-
-    double minGridBuildMs;
-    double maxGridBuildMs;
-    double gridBuildMsSum;
-    int gridBuildSamples;
-
-    double minUpdateMs;
-    double maxUpdateMs;
-    double updateMsSum;
-    int updateSamples;
-
-    double minDrawMs;
-    double maxDrawMs;
-    double drawMsSum;
-    int drawSamples;
-
-    int totalFrames;
-
-    double minFrameWorkMs;
-    double maxFrameWorkMs;
-    double frameWorkMsSum;
-    int frameWorkSamples;
-
-} Stats;
-
-extern Stats stats;

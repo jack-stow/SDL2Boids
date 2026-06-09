@@ -72,16 +72,6 @@ typedef struct GridQuery
 } GridQuery;
 
 
-typedef struct
-{
-    UniformGrid* grid;
-    Boid* boids;
-    int* localCounts;
-    int cellCount;
-} GridCountJobData;
-
-void RunGridCountJob(void* data, int start, int end, int threadIndex);
-
 
 /*
 ===============================================================================
@@ -121,7 +111,7 @@ void UniformGrid_Free(UniformGrid* grid);
     It simply resets all cell counts back to 0
     so boids can be reinserted next frame.
 */
-void UniformGrid_Clear(UniformGrid* grid);
+bool UniformGrid_PrepareBuild(UniformGrid* grid, int boidCount);
 
 
 /*
@@ -251,4 +241,33 @@ const GridCell* UniformGrid_GetCellConst(
     int row
 );
 
+
+typedef struct
+{
+    UniformGrid* grid;
+    Boid* boids;
+
+    int* localCounts;      // numThreads * cellCount
+    int* touchedCells;     // numThreads * maxTouchedPerThread
+    int* touchedCounts;    // numThreads
+
+    int cellCount;
+    int maxTouchedPerThread;
+} GridCountJobData;
+
+typedef struct
+{
+    int* counts;       // numThreads * cellCount
+    int* touched;      // numThreads * maxTouchedPerThread
+    int* touchedCount; // numThreads
+    int cellCount;
+    int maxTouchedPerThread;
+} GridThreadCounts;
+
+void UniformGrid_RunGridCountJob(void* data, int start, int end, int threadIndex);
+
+void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int numThreads);
+
+void UniformGrid_PrefixSum(UniformGrid* grid);
+void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex);
 #endif

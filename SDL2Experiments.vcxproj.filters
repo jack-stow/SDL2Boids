@@ -46,6 +46,7 @@
     <ClCompile Include="src\obstacles.c" />
     <ClCompile Include="src\camera.c" />
     <ClCompile Include="src\workerpool.c" />
+    <ClCompile Include="src\stats.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -105,6 +106,7 @@
     <ClInclude Include="src\obstacles.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\workerpool.h" />
+    <ClInclude Include="src\stats.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

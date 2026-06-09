@@ -13,4 +13,4 @@
 
 #define RNG_SEED 12345
 
-#define TITLE_SIZE 128
+#define TITLE_SIZE 256
