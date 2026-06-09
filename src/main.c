@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 	DrawColor poiColor = { 0, 255, 0, 255 };
 
 	int numThreads = SDL_GetCPUCount();
-	int countThreads = numThreads;
+	int countThreads = 3;
 	SDL_Thread** threads = malloc(sizeof(SDL_Thread*) * numThreads);
 	char (*threadNames)[32] = malloc(sizeof(*threadNames) * numThreads);
 
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 			);
 		}
 
-		if (frameCount % 16 == 0)
+		if (frameCount % 59 == 0)
 		{
 			// prepare grid
 			Profiler_Begin(&profiler, STAT_GRID_PREPARE);

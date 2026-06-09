@@ -365,15 +365,12 @@ void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int n
 
 void UniformGrid_ComputeWriteOffsets(UniformGrid* grid, GridCountJobData* job, int numThreads)
 {
-    /*printf("ComputeWriteOffsets: numThreads=%d\n", numThreads);
-    for (int t = 0; t < numThreads; t++) {
-        printf("  thread %d touchedCount=%d\n", t, job->touchedCounts[t]);
-    }*/
+    //long long totalTouched = 0;
     for (int t = 0; t < numThreads; t++)
     {
         int* touched = &job->touchedCells[t * job->maxTouchedPerThread];
         int touchedCount = job->touchedCounts[t];
-
+        //totalTouched += job->touchedCounts[t];
         for (int i = 0; i < touchedCount; i++)
         {
             int cell = touched[i];
@@ -387,6 +384,7 @@ void UniformGrid_ComputeWriteOffsets(UniformGrid* grid, GridCountJobData* job, i
             job->writeOffsets[t * job->cellCount + cell] = offset;
         }
     }
+    //printf("totalTouched=%lld\n", totalTouched);
 }
 
 

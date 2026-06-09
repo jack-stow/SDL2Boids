@@ -7,7 +7,7 @@
 #define BOID_SCALE        (R(0.05))
 
 // Real casting macro kept to the outside because FRAME_RATE is a double.
-#define TOP_SPEED         (R(5.0 * FRAME_RATE))
+#define TOP_SPEED         (R(4.0 * FRAME_RATE))
 #define MIN_SPEED         (TOP_SPEED * R(0.4))
 #define TURN_SPEED        (R(30.0) / TOP_SPEED)
 #define ACCELERATION      (R(0.1 * FRAME_RATE))
@@ -22,11 +22,11 @@
 
 #define OBSTACLE_AVOID_DISTANCE (R(10.0))
 
-#define BOID_COUNT 	      (260000)
+#define BOID_COUNT 	      (1000000)
 
-#define MAX_VISIBLE       (150000)
-#define VISION_RADIUS     (R(0.2))
-#define PROTECTED_RANGE   (R(0.1))
+#define MAX_VISIBLE       (4)
+#define VISION_RADIUS     (R(0.9))
+#define PROTECTED_RANGE   (R(0.25))
 
 
 #define BOID_TEXTURE      "gfx/boid.png"
