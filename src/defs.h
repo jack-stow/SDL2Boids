@@ -4,8 +4,8 @@
 
 
 #define BORDER_MARGIN 48.0
-#define WORLD_WIDTH  1600
-#define WORLD_HEIGHT 900
+#define WORLD_WIDTH  800
+#define WORLD_HEIGHT 450
 
 #define FRAME_RATE 60.0
 #define BENCHMARK_FRAMES 3600

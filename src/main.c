@@ -254,9 +254,9 @@ int main(int argc, char* argv[])
 
 			// No more clearing numThreads * cellCount.
 			// Only reset one int per thread.
-			//Profiler_Begin(&profiler, STAT_GRID_MEMSET);
+			Profiler_Begin(&profiler, STAT_GRID_MEMSET);
 			memset(gridCountJobData.touchedCounts,0,sizeof(int) * countThreads);
-			//Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_MEMSET);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_MEMSET);
 
 			gridCountJobData.boids = boids;
 
@@ -288,9 +288,10 @@ int main(int argc, char* argv[])
 			UniformGrid_PrefixSum(&grid);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_PREFIX);
 
+			Profiler_Begin(&profiler, STAT_GRID_OFFSET);
 			UniformGrid_ComputeWriteOffsets(&grid, &gridCountJobData, countThreads);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_OFFSET);
 
-			
 			// build grid
 			Profiler_Begin(&profiler, STAT_GRID_BUILD);
 			WorkerPool_Run(
@@ -303,7 +304,9 @@ int main(int argc, char* argv[])
 			);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_BUILD);
 
+			Profiler_Begin(&profiler, STAT_GRID_BUILD);
 			UniformGrid_ClearLocalCounts(&gridCountJobData, countThreads);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_BUILD);
 
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_WORK);
 		}

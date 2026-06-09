@@ -10,8 +10,10 @@
     X(GRID_COUNT,   "Count Grid",   "Count",   true) \
     X(GRID_REDUCE,  "Grid Reduce",  "Reduce",  true) \
     X(GRID_PREFIX,  "Grid Prefix",  "Prefix",  true) \
+    X(GRID_OFFSET,  "Grid Offset",  "Offset",  true) \
     X(GRID_PREPARE, "Grid Prepare", "Prepare", true) \
     X(GRID_BUILD,   "Build Grid",   "Build",   true) \
+    X(GRID_LCOUNTS, "Grid Local Counts",   "Local Counts",   true) \
     X(GRID_WORK,    "Grid Work",    "Grid",    true) \
     X(FLOCK,        "Flock",        "Flock",   true) \
     X(UPDATE,       "Update",       "Update",  true) \
