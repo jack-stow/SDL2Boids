@@ -335,22 +335,20 @@ void UniformGrid_RunGridCountJob(void* data, int start, int end, int threadIndex
 
 void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int numThreads)
 {
+    GridCell* cells = grid->cells;
+
     for (int t = 0; t < numThreads; t++)
     {
-        int* counts =
-            &job->localCounts[t * job->cellCount];
-
-        int* touched =
-            &job->touchedCells[t * job->maxTouchedPerThread];
-
+        int* counts = &job->localCounts[t * job->cellCount];
+        int* touched = &job->touchedCells[t * job->maxTouchedPerThread];
         int touchedCount = job->touchedCounts[t];
 
         for (int i = 0; i < touchedCount; i++)
         {
             int cell = touched[i];
+            int count = counts[cell];
 
-            grid->cells[cell].count += counts[cell];
-
+            cells[cell].count += count;
             // Important: this replaces the expensive memset(localCounts, 0, ...)
             counts[cell] = 0;
         }
@@ -412,5 +410,29 @@ void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex) {
         grid->indices[writeOffset] = i;
 
         cell->writeIndex++;
+    }
+}
+
+
+void UniformGrid_Count(UniformGrid* grid, const Boid* boids, int boidCount)
+{
+    if (grid == NULL) return;
+    if (boids == NULL) return;
+    if (grid->cells == NULL) return;
+    if (boidCount < 0) return;
+    if (boidCount > grid->maxBoids) return;
+
+    for (int i = 0; i < boidCount; i++)
+    {
+        int col = UniformGrid_GetColumn(grid, boids[i].x);
+        int row = UniformGrid_GetRow(grid, boids[i].y);
+
+        if (!UniformGrid_IsValidCell(grid, col, row))
+        {
+            continue;
+        }
+
+        int cellIndex = UniformGrid_GetCellIndex(grid, col, row);
+        grid->cells[cellIndex].count++;
     }
 }

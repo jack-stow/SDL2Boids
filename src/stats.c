@@ -84,3 +84,44 @@ void Profiler_End(FrameProfiler* p, Stats* lifetime, Stats* title, StatId id)
 
     p->active[id] = false;
 }
+
+void Stats_UpdateTitle(Stats* titleStats, SDL_Window* window, double deltaTime)
+{
+    static double titleTimer = 0.0;
+
+    titleTimer += deltaTime;
+
+    if (titleTimer < 1.0)
+    {
+        return;
+    }
+
+
+    char title[1024] = { 0 };
+    size_t offset = 0;
+
+    for (int i = 0; i < STAT_COUNT; i++)
+    {
+        StatMetric* metric = &titleStats->metrics[i];
+
+        if (!metric->showInTitle)
+        {
+            continue;
+        }
+
+        if (metric->samples == 0)
+            continue;
+
+        offset += snprintf(
+            title + offset,
+            sizeof(title) - offset,
+            "%s: %.3f | ",
+            metric->titleName,
+            Stats_GetAvg(titleStats, (StatId)i));
+    }
+
+    SDL_SetWindowTitle(window, title);
+
+    Stats_ResetSamples(titleStats);
+    titleTimer = 0.0;
+}

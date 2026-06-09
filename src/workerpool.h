@@ -15,6 +15,7 @@ typedef struct
     int generation;
     int completed;
     int numThreads;
+    int activeThreads;
 
     int nextChunkStart;
     int chunkSize;
@@ -28,10 +29,4 @@ WorkerPool workerpool;
 
 int PersistentWorkerMainBalanced(void* data);
 
-void WorkerPool_Run(
-    WorkerPool* pool,
-    int itemCount,
-    int chunkSize,
-    WorkerJobFunc jobFunc,
-    void* jobData
-);
+void WorkerPool_Run(WorkerPool* pool, int itemCount, int chunkSize, int activeThreads, WorkerJobFunc jobFunc, void* jobData);

@@ -28,43 +28,7 @@ void RunFlockWorkers(WorkerPool* workerpool, UniformGrid* grid, int boidCount, B
 
 
 
-void Stats_UpdateTitle(Stats* titleStats, SDL_Window* window, double deltaTime)
-{
-	static double titleTimer = 0.0;
 
-	titleTimer += deltaTime;
-
-	if (titleTimer < 1.0)
-	{
-		return;
-	}
-
-
-	char title[1024] = { 0 };
-	size_t offset = 0;
-
-	for (int i = 0; i < STAT_COUNT; i++)
-	{
-		StatMetric* metric = &titleStats->metrics[i];
-
-		if (!metric->showInTitle)
-		{
-			continue;
-		}
-
-		offset += snprintf(
-			title + offset,
-			sizeof(title) - offset,
-			"%s: %.3f | ",
-			metric->titleName,
-			Stats_GetAvg(titleStats, (StatId)i));
-	}
-
-	SDL_SetWindowTitle(window, title);
-
-	Stats_ResetSamples(titleStats);
-	titleTimer = 0.0;
-}
 
 int main(int argc, char* argv[])
 {
@@ -170,7 +134,7 @@ int main(int argc, char* argv[])
 	DrawColor poiColor = { 0, 255, 0, 255 };
 
 	int numThreads = SDL_GetCPUCount();
-	int countThreads = numThreads;
+	int countThreads = 8;
 	SDL_Thread** threads = malloc(sizeof(SDL_Thread*) * numThreads);
 	char (*threadNames)[32] = malloc(sizeof(*threadNames) * numThreads);
 
@@ -280,8 +244,9 @@ int main(int argc, char* argv[])
 			gridBuiltThisFrame = true;
 
 			//gridMemsetStart = SDL_GetPerformanceCounter();
+			Profiler_Begin(&profiler, STAT_GRID_WORK);
 
-			Profiler_Begin(&profiler, STAT_GRID_MEMSET);
+			//Profiler_Begin(&profiler, STAT_GRID_MEMSET);
 			// No more clearing numThreads * cellCount.
 			// Only reset one int per thread.
 			memset(
@@ -289,20 +254,22 @@ int main(int argc, char* argv[])
 				0,
 				sizeof(int) * countThreads
 			);
-			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_MEMSET);
+			//Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_MEMSET);
 			
 			Profiler_Begin(&profiler, STAT_GRID_COUNT);
 			WorkerPool_Run(
 				&workerpool,
 				boidCount,
-				31250,
+				8192,
+				countThreads,
 				UniformGrid_RunGridCountJob,
 				&gridCountJobData
 			);
+			//UniformGrid_Count(&grid, boids, boidCount);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_COUNT);
 
 			
-			// 
+			// Reduce
 			Profiler_Begin(&profiler, STAT_GRID_REDUCE);
 			UniformGrid_GridCountReduce(&grid, &gridCountJobData, countThreads);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_REDUCE);
@@ -325,11 +292,13 @@ int main(int argc, char* argv[])
 			WorkerPool_Run(
 				&workerpool,
 				boidCount,
-				31250,
+				4096,
+				workerpool.numThreads,
 				UniformGrid_RunBuildJob,
 				&gridCountJobData
 			);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_BUILD);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_WORK);
 		}
 
 
@@ -427,15 +396,6 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-
-
-void displayFPS(double fps)
-{
-	char title[TITLE_SIZE];
-	snprintf(title, sizeof(title), "FPS: %.2f", fps);
-
-	SDL_SetWindowTitle(app.window, title);
-}
 
 void printStats(void)
 {
@@ -620,6 +580,7 @@ void RunFlockWorkers(
 		workerpool,
 		boidCount,
 		256,
+		workerpool->numThreads,
 		FlockJob_Run,
 		&job
 	);

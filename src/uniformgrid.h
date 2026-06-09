@@ -270,4 +270,5 @@ void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int n
 
 void UniformGrid_PrefixSum(UniformGrid* grid);
 void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex);
+void UniformGrid_Count(UniformGrid* grid, const Boid* boids, int boidCount);
 #endif

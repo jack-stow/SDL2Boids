@@ -12,6 +12,7 @@
     X(GRID_PREFIX,  "Grid Prefix",  "Prefix",  true) \
     X(GRID_PREPARE, "Grid Prepare", "Prepare", true) \
     X(GRID_BUILD,   "Build Grid",   "Build",   true) \
+    X(GRID_WORK,    "Grid Work",    "Grid",    true) \
     X(FLOCK,        "Flock",        "Flock",   true) \
     X(UPDATE,       "Update",       "Update",  true) \
     X(DRAW,         "Draw",         "Draw",    true) \

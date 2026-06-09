@@ -25,7 +25,7 @@
 #define BOID_COUNT 	      (1000000)
 
 #define MAX_VISIBLE       (150000)
-#define VISION_RADIUS     (R(2))
+#define VISION_RADIUS     (R(4))
 #define PROTECTED_RANGE   (R(1))
 
 

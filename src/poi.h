@@ -5,9 +5,9 @@
 #include "camera.h"
 
 #define NUM_POI 10
-#define POI_HEALTH 10000
-#define POI_ATTRACTION_RADIUS 800.0
-#define POI_CONSUME_RADIUS 100.0
+#define POI_HEALTH 500
+#define POI_ATTRACTION_RADIUS 500.0
+#define POI_CONSUME_RADIUS 30.0
 
 
 typedef struct
