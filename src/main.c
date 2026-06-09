@@ -22,31 +22,49 @@ Camera camera;
 void printStats(void);
 vec2 GetCameraInputDirection();
 void DrawBorders();
-void UpdateStats(
-	double deltaTime,
-	bool gridBuiltThisFrame,
-	Uint64 gridMemsetStart,
-	Uint64 gridMemsetEnd,
-	Uint64 gridCountStart,
-	Uint64 gridCountEnd,
-	Uint64 gridReduceStart,
-	Uint64 gridReduceEnd,
-	Uint64 gridPrefixStart,
-	Uint64 gridPrefixEnd,
-	Uint64 gridPrepareStart,
-	Uint64 gridPrepareEnd,
-	Uint64 gridBuildStart,
-	Uint64 gridBuildEnd,
-	Uint64 updateStart,
-	Uint64 updateEnd,
-	Uint64 drawStart,
-	Uint64 drawEnd,
-	Uint64 frameStart,
-	Uint64 frameEnd,
-	Uint64 performanceFreq);
 void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim, bool rebuildPoints);
 void HandleObstacleInput(Obstacles** obstacles);
 void RunFlockWorkers(WorkerPool* workerpool, UniformGrid* grid, int boidCount, Boid** boids, Boid** boidsNext, Obstacles* obstacles, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime);
+
+
+
+void Stats_UpdateTitle(Stats* titleStats, SDL_Window* window, double deltaTime)
+{
+	static double titleTimer = 0.0;
+
+	titleTimer += deltaTime;
+
+	if (titleTimer < 1.0)
+	{
+		return;
+	}
+
+
+	char title[1024] = { 0 };
+	size_t offset = 0;
+
+	for (int i = 0; i < STAT_COUNT; i++)
+	{
+		StatMetric* metric = &titleStats->metrics[i];
+
+		if (!metric->showInTitle)
+		{
+			continue;
+		}
+
+		offset += snprintf(
+			title + offset,
+			sizeof(title) - offset,
+			"%s: %.3f | ",
+			metric->titleName,
+			Stats_GetAvg(titleStats, (StatId)i));
+	}
+
+	SDL_SetWindowTitle(window, title);
+
+	Stats_ResetSamples(titleStats);
+	titleTimer = 0.0;
+}
 
 int main(int argc, char* argv[])
 {
@@ -144,9 +162,6 @@ int main(int argc, char* argv[])
 	double fpsTimer = 0.0;
 	Uint64 frameCount = 0;
 
-	Uint64 updateStart = 0;
-	Uint64 updateEnd = 0;
-	Uint64 drawEnd = 0;
 
 	double flockTimeAccum = 0.0;
 	int flockCallCount = 0;
@@ -154,32 +169,6 @@ int main(int argc, char* argv[])
 
 	DrawColor poiColor = { 0, 255, 0, 255 };
 
-
-	// Statistics
-	Stats_Init(&stats);
-
-	/*stats.minFps = DBL_MAX;
-	stats.maxFps = 0.0;
-	stats.fpsSum = 0.0;
-	stats.fpsSamples = 0;
-
-	stats.minUpdateMs = DBL_MAX;
-	stats.maxUpdateMs = 0.0;
-	stats.updateMsSum = 0.0;
-	stats.updateSamples = 0;
-
-	stats.minDrawMs = DBL_MAX;
-	stats.maxDrawMs = 0.0;
-	stats.drawMsSum = 0.0;
-	stats.drawSamples = 0;
-	stats.totalFrames = 0;
-
-	stats.minFrameWorkMs = DBL_MAX;
-	stats.maxFrameWorkMs = 0.0;
-	stats.frameWorkMsSum = 0.0;
-	stats.frameWorkSamples = 0;*/
-
-	/////////////////////////
 	int numThreads = SDL_GetCPUCount();
 	int countThreads = numThreads;
 	SDL_Thread** threads = malloc(sizeof(SDL_Thread*) * numThreads);
@@ -243,10 +232,17 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
+	// Statistics
+	Stats_Init(&stats);
+	Stats titleStats;
+	Stats_Init(&titleStats);
+
+	FrameProfiler profiler = { 0 };
+
 	while (1)
 	{
 		Uint64 frameStart = SDL_GetPerformanceCounter();
-
+		Profiler_Begin(&profiler, STAT_FRAME_WORK);
 		double deltaTime =
 			(double)(frameStart - lastCounter) /
 			SDL_GetPerformanceFrequency();
@@ -257,6 +253,11 @@ int main(int argc, char* argv[])
 
 		prepareScene();
 		doInput();
+		double fps = 1.0 / deltaTime;
+
+		Stats_AddSample(&stats, STAT_FPS, fps);
+		Stats_AddSample(&titleStats, STAT_FPS, fps);
+		Profiler_Begin(&profiler, STAT_UPDATE);
 
 		if (app.mouseWheelY != 0)
 		{
@@ -272,27 +273,15 @@ int main(int argc, char* argv[])
 			);
 		}
 
-		Uint64 updateStart = SDL_GetPerformanceCounter();
 		bool gridBuiltThisFrame = false;
 
-		Uint64 gridMemsetStart = 0;
-		Uint64 gridMemsetEnd = 0;
-		Uint64 gridReduceStart = 0;
-		Uint64 gridReduceEnd = 0;
-		Uint64 gridCountStart = 0;
-		Uint64 gridCountEnd = 0;
-		Uint64 gridPrefixStart = 0;
-		Uint64 gridPrefixEnd = 0;
-		Uint64 gridPrepareStart = 0;
-		Uint64 gridPrepareEnd = 0;
-		Uint64 gridBuildStart = 0;
-		Uint64 gridBuildEnd = 0;
 		if (frameCount % 16 == 0)
 		{
 			gridBuiltThisFrame = true;
 
-			gridMemsetStart = SDL_GetPerformanceCounter();
+			//gridMemsetStart = SDL_GetPerformanceCounter();
 
+			Profiler_Begin(&profiler, STAT_GRID_MEMSET);
 			// No more clearing numThreads * cellCount.
 			// Only reset one int per thread.
 			memset(
@@ -300,11 +289,9 @@ int main(int argc, char* argv[])
 				0,
 				sizeof(int) * countThreads
 			);
-
-			gridMemsetEnd = SDL_GetPerformanceCounter();
-
-			gridCountStart = gridMemsetEnd;
-
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_MEMSET);
+			
+			Profiler_Begin(&profiler, STAT_GRID_COUNT);
 			WorkerPool_Run(
 				&workerpool,
 				boidCount,
@@ -312,27 +299,29 @@ int main(int argc, char* argv[])
 				UniformGrid_RunGridCountJob,
 				&gridCountJobData
 			);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_COUNT);
 
-			gridCountEnd = SDL_GetPerformanceCounter();
-
-			gridReduceStart = gridCountEnd;
-
+			
+			// 
+			Profiler_Begin(&profiler, STAT_GRID_REDUCE);
 			UniformGrid_GridCountReduce(&grid, &gridCountJobData, countThreads);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_REDUCE);
 
-			gridReduceEnd = SDL_GetPerformanceCounter();
-
-			gridPrefixStart = gridReduceEnd;
+			// prefixsum
+			Profiler_Begin(&profiler, STAT_GRID_PREFIX);
 			UniformGrid_PrefixSum(&grid);
-			gridPrefixEnd = SDL_GetPerformanceCounter();
-			//UniformGrid_PrepareBuild(&grid);
-			gridPrepareStart = gridPrefixEnd;
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_PREFIX);
+			
+			// prepare grid
+			Profiler_Begin(&profiler, STAT_GRID_PREPARE);
 			if (!UniformGrid_PrepareBuild(&grid, boidCount))
 			{
 				return 0;
 			}
-			gridPrepareEnd = SDL_GetPerformanceCounter();
-			gridBuildStart = gridPrepareEnd;
-			//UniformGrid_Build(&grid, boids, boidCount);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_PREPARE);
+			
+			// build grid
+			Profiler_Begin(&profiler, STAT_GRID_BUILD);
 			WorkerPool_Run(
 				&workerpool,
 				boidCount,
@@ -340,11 +329,12 @@ int main(int argc, char* argv[])
 				UniformGrid_RunBuildJob,
 				&gridCountJobData
 			);
-			gridBuildEnd = SDL_GetPerformanceCounter();
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_BUILD);
 		}
 
 
 
+		Profiler_Begin(&profiler, STAT_FLOCK);
 		RunFlockWorkers(
 			&workerpool,
 			&grid,
@@ -357,10 +347,13 @@ int main(int argc, char* argv[])
 			poiCount,
 			deltaTime
 		);
+		Profiler_End(&profiler, &stats, &titleStats, STAT_FLOCK);
+		
 
-		Uint64 updateEnd = SDL_GetPerformanceCounter();
+		Profiler_End(&profiler, &stats, &titleStats, STAT_UPDATE);
 
-		Uint64 drawStart = updateEnd;
+
+		Profiler_Begin(&profiler, STAT_DRAW);
 
 		vec2 cameraInputDir = GetCameraInputDirection();
 		camera.x += cameraInputDir.x * CAMERA_SPEED * R(deltaTime);
@@ -393,38 +386,22 @@ int main(int argc, char* argv[])
 		DrawBorders();
 		Obstacles_Draw(&camera, obstacles);
 
-		Uint64 drawEnd = SDL_GetPerformanceCounter();
+		//Uint64 drawEnd = SDL_GetPerformanceCounter();
 
 		presentScene();
+
+
+		Profiler_End(&profiler, &stats, &titleStats, STAT_DRAW);
 
 		Uint64 frameEnd = SDL_GetPerformanceCounter();
 
 		Uint64 performanceFreq = SDL_GetPerformanceFrequency();
 
+		Stats_UpdateTitle(
+			&titleStats,
+			app.window,
+			deltaTime);
 
-		//UpdateStats(deltaTime, updateStart, gridCountEnd, gridBuildEnd, updateEnd, drawEnd, frameStart, frameEnd, performanceFreq);
-		UpdateStats(
-			deltaTime,
-			gridBuiltThisFrame,
-			gridMemsetStart,
-			gridMemsetEnd,
-			gridCountStart,
-			gridCountEnd,
-			gridReduceStart,
-			gridReduceEnd,
-			gridPrefixStart,
-			gridPrefixEnd,
-			gridPrepareStart,
-			gridPrepareEnd,
-			gridBuildStart,
-			gridBuildEnd,
-			updateStart,
-			updateEnd,
-			drawStart,
-			drawEnd,
-			frameStart,
-			frameEnd,
-			performanceFreq);
 
 		double frameSeconds =
 			(double)(frameEnd - frameStart) / performanceFreq;
@@ -437,6 +414,8 @@ int main(int argc, char* argv[])
 		{
 			exit(0);
 		}
+
+		Profiler_End(&profiler, &stats, &titleStats, STAT_FRAME_WORK);
 
 		if (frameSeconds < targetFrameTime)
 		{
@@ -495,183 +474,6 @@ void printStats(void)
 	printf("\n------------------------\n");
 
 	cleanup();
-}
-
-void UpdateStats(
-	double deltaTime,
-	bool gridBuiltThisFrame,
-	Uint64 gridMemsetStart,
-	Uint64 gridMemsetEnd,
-	Uint64 gridCountStart,
-	Uint64 gridCountEnd,
-	Uint64 gridReduceStart,
-	Uint64 gridReduceEnd,
-	Uint64 gridPrefixStart,
-	Uint64 gridPrefixEnd,
-	Uint64 gridPrepareStart,
-	Uint64 gridPrepareEnd,
-	Uint64 gridBuildStart,
-	Uint64 gridBuildEnd,
-	Uint64 updateStart,
-	Uint64 updateEnd,
-	Uint64 drawStart,
-	Uint64 drawEnd,
-	Uint64 frameStart,
-	Uint64 frameEnd,
-	Uint64 performanceFreq)
-{
-	static double titleTimer = 0.0;
-	static int titleFrameCount = 0;
-
-	static double titleFpsSum = 0.0;
-	static double titleMemsetGridMsSum = 0.0;
-	static double titleCountGridMsSum = 0.0;
-	static double titleReduceGridMsSum = 0.0;
-	static double titlePrefixGridMsSum = 0.0;
-	static double titlePrepareGridMsSum = 0.0;
-	static double titleBuildGridMsSum = 0.0;
-	static double titleUpdateMsSum = 0.0;
-	static double titleDrawMsSum = 0.0;
-	static double titleWorkMsSum = 0.0;
-
-	static int titleMemsetGridSamples = 0;
-	static int titleCountGridSamples = 0;
-	static int titleReduceGridSamples = 0;
-	static int titlePrefixGridSamples = 0;
-	static int titlePrepareGridSamples = 0;
-	static int titleBuildGridSamples = 0;
-	static int titleUpdateSamples = 0;
-	static int titleDrawSamples = 0;
-	static int titleWorkSamples = 0;
-
-	stats.runTime += deltaTime;
-	stats.totalFrames++;
-
-	if (stats.totalFrames <= WARMUP_FRAMES)
-	{
-		return;
-	}
-
-	double fps = 0.0;
-
-	if (deltaTime > 0.0)
-	{
-		fps = 1.0 / deltaTime;
-		Stats_AddSample(&stats, STAT_FPS, fps);
-	}
-
-	if (gridBuiltThisFrame)
-	{
-		double gridMemsetMs = TicksToMs(gridMemsetStart, gridMemsetEnd, performanceFreq);
-		double gridCountMs = TicksToMs(gridCountStart, gridCountEnd, performanceFreq);
-		double gridReduceMs = TicksToMs(gridReduceStart, gridReduceEnd, performanceFreq);
-		double gridPrefixMs = TicksToMs(gridPrefixStart, gridPrefixEnd, performanceFreq);
-		double gridPrepareMs = TicksToMs(gridPrepareStart, gridPrepareEnd, performanceFreq);
-		double gridBuildMs = TicksToMs(gridBuildStart, gridBuildEnd, performanceFreq);
-
-		Stats_AddSample(&stats, STAT_GRID_MEMSET, gridMemsetMs);
-		Stats_AddSample(&stats, STAT_GRID_COUNT, gridCountMs);
-		Stats_AddSample(&stats, STAT_GRID_REDUCE, gridReduceMs);
-		Stats_AddSample(&stats, STAT_GRID_PREFIX, gridPrefixMs);
-		Stats_AddSample(&stats, STAT_GRID_PREPARE, gridPrepareMs);
-		Stats_AddSample(&stats, STAT_GRID_BUILD, gridBuildMs);
-
-		titleMemsetGridMsSum += gridMemsetMs;
-		titleCountGridMsSum += gridCountMs;
-		titleReduceGridMsSum += gridReduceMs;
-		titlePrefixGridMsSum += gridPrefixMs;
-		titlePrepareGridMsSum += gridPrepareMs;
-		titleBuildGridMsSum += gridBuildMs;
-
-		titleMemsetGridSamples++;
-		titleCountGridSamples++;
-		titleReduceGridSamples++;
-		titlePrefixGridSamples++;
-		titlePrepareGridSamples++;
-		titleBuildGridSamples++;
-	}
-
-	double updateMs = TicksToMs(updateStart, updateEnd, performanceFreq);
-	double drawMs = TicksToMs(drawStart, drawEnd, performanceFreq);
-	double frameWorkMs = TicksToMs(frameStart, frameEnd, performanceFreq);
-
-	Stats_AddSample(&stats, STAT_UPDATE, updateMs);
-	Stats_AddSample(&stats, STAT_DRAW, drawMs);
-	Stats_AddSample(&stats, STAT_FRAME_WORK, frameWorkMs);
-
-	titleTimer += deltaTime;
-	titleFrameCount++;
-
-	titleFpsSum += fps;
-	titleUpdateMsSum += updateMs;
-	titleDrawMsSum += drawMs;
-	titleWorkMsSum += frameWorkMs;
-
-	titleUpdateSamples++;
-	titleDrawSamples++;
-	titleWorkSamples++;
-
-	if (titleTimer >= 1.0)
-	{
-		int framesRemaining = BENCHMARK_FRAMES - stats.totalFrames;
-		double secondsRemaining = framesRemaining / FRAME_RATE;
-
-		double titleFps = titleFrameCount > 0 ? titleFpsSum / titleFrameCount : 0.0;
-		double titleMemsetGridMs = titleMemsetGridSamples > 0 ? titleMemsetGridMsSum / titleMemsetGridSamples : 0.0;
-		double titleCountGridMs = titleCountGridSamples > 0 ? titleCountGridMsSum / titleCountGridSamples : 0.0;
-		double titleReduceGridMs = titleReduceGridSamples > 0 ? titleReduceGridMsSum / titleReduceGridSamples : 0.0;
-		double titlePrefixGridMs = titlePrefixGridSamples > 0 ? titlePrefixGridMsSum / titlePrefixGridSamples : 0.0;
-		double titlePrepareGridMs = titlePrepareGridSamples > 0 ? titlePrepareGridMsSum / titlePrepareGridSamples : 0.0;
-		double titleBuildGridMs = titleBuildGridSamples > 0 ? titleBuildGridMsSum / titleBuildGridSamples : 0.0;
-		double titleUpdateMs = titleUpdateSamples > 0 ? titleUpdateMsSum / titleUpdateSamples : 0.0;
-		double titleDrawMs = titleDrawSamples > 0 ? titleDrawMsSum / titleDrawSamples : 0.0;
-		double titleWorkMs = titleWorkSamples > 0 ? titleWorkMsSum / titleWorkSamples : 0.0;
-
-		char title[TITLE_SIZE];
-
-		snprintf(
-			title,
-			sizeof(title),
-			"FPS: %.1f | Memset: %.3f ms | Count: %.3f ms | Reduce %.3f ms | Prefix: %.3f ms | Prepare: %.3f ms | Build: %.3f ms | Update: %.3f ms | Draw: %.3f ms | Work: %.3f ms | ETA: %.1fs",
-			titleFps,
-			titleMemsetGridMs,
-			titleCountGridMs,
-			titleReduceGridMs,
-			titlePrefixGridMs,
-			titlePrepareGridMs,
-			titleBuildGridMs,
-			titleUpdateMs,
-			titleDrawMs,
-			titleWorkMs,
-			secondsRemaining
-		);
-
-		SDL_SetWindowTitle(app.window, title);
-
-		titleTimer = 0.0;
-		titleFrameCount = 0;
-
-		titleFpsSum = 0.0;
-		titleMemsetGridMsSum = 0.0;
-		titleCountGridMsSum = 0.0;
-		titleReduceGridMsSum = 0.0;
-		titlePrefixGridMsSum = 0.0;
-		titlePrepareGridMsSum = 0.0;
-		titleBuildGridMsSum = 0.0;
-		titleUpdateMsSum = 0.0;
-		titleDrawMsSum = 0.0;
-		titleWorkMsSum = 0.0;
-
-		titleMemsetGridSamples = 0;
-		titleCountGridSamples = 0;
-		titleReduceGridSamples = 0;
-		titlePrefixGridSamples = 0;
-		titlePrepareGridSamples = 0;
-		titleBuildGridSamples = 0;
-		titleUpdateSamples = 0;
-		titleDrawSamples = 0;
-		titleWorkSamples = 0;
-	}
 }
 
 void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, SimulationParameters* sim, bool rebuildPoints)

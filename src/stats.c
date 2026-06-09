@@ -4,35 +4,13 @@ void Stats_Init(Stats* stats)
 {
     memset(stats, 0, sizeof(*stats));
 
-    stats->metrics[STAT_FPS] =
-        (StatMetric){ "FPS", "FPS", DBL_MAX, 0.0, 0.0, 0, true };
+    #define X(id, displayName, titleName, show) \
+        stats->metrics[STAT_##id] = \
+            (StatMetric){ displayName, titleName, DBL_MAX, 0.0, 0.0, 0, show };
 
-    stats->metrics[STAT_GRID_MEMSET] =
-        (StatMetric){ "Grid Memset", "Memset", DBL_MAX, 0.0, 0.0, 0, true };
+        STAT_LIST(X)
 
-    stats->metrics[STAT_GRID_COUNT] =
-        (StatMetric){ "Count Grid", "Count", DBL_MAX, 0.0, 0.0, 0, true };
-
-    stats->metrics[STAT_GRID_REDUCE] =
-        (StatMetric){ "Grid Reduce", "Reduce", DBL_MAX, 0.0, 0.0, 0, true };
-
-    stats->metrics[STAT_GRID_PREFIX] =
-        (StatMetric){ "Grid Prefix", "Prefix", DBL_MAX, 0.0, 0.0, 0, true };
-
-    stats->metrics[STAT_GRID_PREPARE] =
-        (StatMetric){ "Grid Prepare", "Prepare", DBL_MAX, 0.0, 0.0, 0, true };
-
-    stats->metrics[STAT_GRID_BUILD] =
-        (StatMetric){ "Build Grid", "Build", DBL_MAX, 0.0, 0.0, 0, true };
-
-    stats->metrics[STAT_UPDATE] =
-        (StatMetric){ "Update", "Update", DBL_MAX, 0.0, 0.0, 0, true };
-
-    stats->metrics[STAT_DRAW] =
-        (StatMetric){ "Draw", "Draw", DBL_MAX, 0.0, 0.0, 0, true };
-
-    stats->metrics[STAT_FRAME_WORK] =
-        (StatMetric){ "Frame Work", "Work", DBL_MAX, 0.0, 0.0, 0, true };
+    #undef X
 }
 
 void Stats_AddSample(Stats* stats, StatId id, double value)
@@ -49,4 +27,60 @@ void Stats_AddSample(Stats* stats, StatId id, double value)
 double TicksToMs(Uint64 start, Uint64 end, Uint64 freq)
 {
     return (double)(end - start) / (double)freq * 1000.0;
+}
+
+void Stats_ResetSamples(Stats* stats)
+{
+    for (int i = 0; i < STAT_COUNT; i++)
+    {
+        StatMetric* m = &stats->metrics[i];
+
+        m->min = DBL_MAX;
+        m->max = 0.0;
+        m->sum = 0.0;
+        m->samples = 0;
+    }
+
+    stats->runTime = 0.0;
+    stats->totalFrames = 0;
+}
+
+double Stats_GetAvg(const Stats* stats, StatId id)
+{
+    const StatMetric* m = &stats->metrics[id];
+
+    if (m->samples == 0)
+    {
+        return 0.0;
+    }
+
+    return m->sum / m->samples;
+}
+
+
+
+void Profiler_Begin(FrameProfiler* p, StatId id)
+{
+    p->start[id] = SDL_GetPerformanceCounter();
+    p->active[id] = true;
+}
+
+void Profiler_End(FrameProfiler* p, Stats* lifetime, Stats* title, StatId id)
+{
+    if (!p->active[id])
+    {
+        return;
+    }
+
+    Uint64 end = SDL_GetPerformanceCounter();
+    double ms = TicksToMs(p->start[id], end, SDL_GetPerformanceFrequency());
+
+    Stats_AddSample(lifetime, id, ms);
+
+    if (title != NULL)
+    {
+        Stats_AddSample(title, id, ms);
+    }
+
+    p->active[id] = false;
 }
