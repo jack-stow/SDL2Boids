@@ -22,7 +22,7 @@
 
 #define OBSTACLE_AVOID_DISTANCE (R(10.0))
 
-#define BOID_COUNT 	      (300000)
+#define BOID_COUNT 	      (260000)
 
 #define MAX_VISIBLE       (150000)
 #define VISION_RADIUS     (R(0.2))

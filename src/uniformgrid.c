@@ -1,4 +1,5 @@
 #include "uniformgrid.h"
+//#include <assert.h>
 
 
 /*
@@ -297,13 +298,11 @@ void UniformGrid_RunGridCountJob(void* data, int start, int end, int threadIndex
     UniformGrid* grid = job->grid;
     Boid* boids = job->boids;
 
-    int* myCounts =
-        &job->localCounts[threadIndex * job->cellCount];
+    int partitionIndex = start / job->partitionSize;
 
-    int* myTouched =
-        &job->touchedCells[threadIndex * job->maxTouchedPerThread];
-
-    int touchedCount = job->touchedCounts[threadIndex];
+    int* myCounts = &job->localCounts[partitionIndex * job->cellCount];
+    int* myTouched = &job->touchedCells[partitionIndex * job->maxTouchedPerThread];
+    int touchedCount = job->touchedCounts[partitionIndex];
 
     real cellSize = grid->cellSize;
     int cols = grid->cols;
@@ -324,13 +323,24 @@ void UniformGrid_RunGridCountJob(void* data, int start, int end, int threadIndex
 
         if (myCounts[cellIndex] == 0)
         {
+           /* if (touchedCount >= job->maxTouchedPerThread)
+            {
+                printf(
+                    "Touched overflow: thread=%d touched=%d max=%d\n",
+                    threadIndex,
+                    touchedCount,
+                    job->maxTouchedPerThread
+                );
+                __debugbreak();
+            }*/
+
             myTouched[touchedCount++] = cellIndex;
         }
 
         myCounts[cellIndex]++;
     }
 
-    job->touchedCounts[threadIndex] = touchedCount;
+    job->touchedCounts[partitionIndex] = touchedCount;
 }
 
 void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int numThreads)
@@ -346,31 +356,35 @@ void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int n
         for (int i = 0; i < touchedCount; i++)
         {
             int cell = touched[i];
-            int count = counts[cell];
-
-            cells[cell].count += count;
-            
+            cells[cell].count += counts[cell];
         }
 
-        job->touchedCounts[t] = 0;
+        // DO NOT clear touchedCounts here
     }
 }
 
-void UniformGrid_ComputeWriteOffsets(
-    UniformGrid* grid,
-    GridCountJobData* job,
-    int numThreads)
+void UniformGrid_ComputeWriteOffsets(UniformGrid* grid, GridCountJobData* job, int numThreads)
 {
-    for (int cell = 0; cell < job->cellCount; cell++)
+    /*printf("ComputeWriteOffsets: numThreads=%d\n", numThreads);
+    for (int t = 0; t < numThreads; t++) {
+        printf("  thread %d touchedCount=%d\n", t, job->touchedCounts[t]);
+    }*/
+    for (int t = 0; t < numThreads; t++)
     {
-        int offset = grid->cells[cell].start;
+        int* touched = &job->touchedCells[t * job->maxTouchedPerThread];
+        int touchedCount = job->touchedCounts[t];
 
-        for (int t = 0; t < numThreads; t++)
+        for (int i = 0; i < touchedCount; i++)
         {
-            int index = t * job->cellCount + cell;
+            int cell = touched[i];
+            int offset = grid->cells[cell].start;
 
-            job->writeOffsets[index] = offset;
-            offset += job->localCounts[index];
+            for (int prev = 0; prev < t; prev++)
+            {
+                offset += job->localCounts[prev * job->cellCount + cell];
+            }
+
+            job->writeOffsets[t * job->cellCount + cell] = offset;
         }
     }
 }
@@ -403,8 +417,10 @@ void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex)
     UniformGrid* grid = job->grid;
     Boid* boids = job->boids;
 
+    int partitionIndex = start / job->partitionSize;
+
     int* myOffsets =
-        &job->writeOffsets[threadIndex * job->cellCount];
+        &job->writeOffsets[partitionIndex * job->cellCount];
 
     real cellSize = grid->cellSize;
     int cols = grid->cols;
@@ -424,6 +440,7 @@ void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex)
         int cellIndex = row * cols + col;
 
         int writeOffset = myOffsets[cellIndex]++;
+        //assert(writeOffset >= 0 && writeOffset < job->grid->maxBoids);
         grid->indices[writeOffset] = i;
     }
 }
@@ -468,3 +485,4 @@ void UniformGrid_Count(UniformGrid* grid, const Boid* boids, int boidCount)
         grid->cells[cellIndex].count++;
     }
 }
+

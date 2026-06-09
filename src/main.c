@@ -259,12 +259,17 @@ int main(int argc, char* argv[])
 			//Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_MEMSET);
 
 			gridCountJobData.boids = boids;
+
+			int partitionSize = (boidCount + countThreads - 1) / countThreads;
+
+			gridCountJobData.partitionSize = partitionSize;
+			gridCountJobData.partitionCount = countThreads;
 			
 			Profiler_Begin(&profiler, STAT_GRID_COUNT);
 			WorkerPool_Run(
 				&workerpool,
 				boidCount,
-				8192,
+				partitionSize,
 				countThreads,
 				UniformGrid_RunGridCountJob,
 				&gridCountJobData
@@ -282,14 +287,16 @@ int main(int argc, char* argv[])
 			Profiler_Begin(&profiler, STAT_GRID_PREFIX);
 			UniformGrid_PrefixSum(&grid);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_PREFIX);
-			
+
+			UniformGrid_ComputeWriteOffsets(&grid, &gridCountJobData, countThreads);
+
 			
 			// build grid
 			Profiler_Begin(&profiler, STAT_GRID_BUILD);
 			WorkerPool_Run(
 				&workerpool,
 				boidCount,
-				4096,
+				partitionSize,
 				countThreads,
 				UniformGrid_RunBuildJob,
 				&gridCountJobData

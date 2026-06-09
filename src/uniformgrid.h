@@ -255,7 +255,10 @@ typedef struct
     int cellCount;
     int maxTouchedPerThread;
 
-    int* writeOffsets; // countThreads * cellCount
+    int* writeOffsets; // countThreads * cellCountf
+
+    int partitionSize;
+    int partitionCount;
 
 } GridCountJobData;
 
