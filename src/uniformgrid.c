@@ -349,11 +349,29 @@ void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int n
             int count = counts[cell];
 
             cells[cell].count += count;
-            // Important: this replaces the expensive memset(localCounts, 0, ...)
-            counts[cell] = 0;
+            
         }
 
         job->touchedCounts[t] = 0;
+    }
+}
+
+void UniformGrid_ComputeWriteOffsets(
+    UniformGrid* grid,
+    GridCountJobData* job,
+    int numThreads)
+{
+    for (int cell = 0; cell < job->cellCount; cell++)
+    {
+        int offset = grid->cells[cell].start;
+
+        for (int t = 0; t < numThreads; t++)
+        {
+            int index = t * job->cellCount + cell;
+
+            job->writeOffsets[index] = offset;
+            offset += job->localCounts[index];
+        }
     }
 }
 
@@ -378,38 +396,52 @@ void UniformGrid_PrefixSum(UniformGrid* grid)
 
 
 
-void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex) {
-
+void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex)
+{
     GridCountJobData* job = (GridCountJobData*)data;
 
     UniformGrid* grid = job->grid;
     Boid* boids = job->boids;
 
-    int boidCount = end - start;
+    int* myOffsets =
+        &job->writeOffsets[threadIndex * job->cellCount];
 
-    if (grid == NULL) return 0;
-    if (boids == NULL) return 0;
-    if (boidCount < 0) return 0;
-    if (boidCount > grid->maxBoids) return 0;
+    real cellSize = grid->cellSize;
+    int cols = grid->cols;
+    int rows = grid->rows;
 
+    for (int i = start; i < end; i++)
+    {
+        int col = (int)(boids[i].x / cellSize);
+        int row = (int)(boids[i].y / cellSize);
 
-    // Pass 2: fill cell slices
-    for (int i = 0; i < boidCount; i++) {
-        int col = UniformGrid_GetColumn(grid, boids[i].x);
-        int row = UniformGrid_GetRow(grid, boids[i].y);
-
-        if (!UniformGrid_IsValidCell(grid, col, row)) {
+        if ((unsigned)col >= (unsigned)cols ||
+            (unsigned)row >= (unsigned)rows)
+        {
             continue;
         }
 
-        int cellIndex = UniformGrid_GetCellIndex(grid, col, row);
-        GridCell* cell = &grid->cells[cellIndex];
+        int cellIndex = row * cols + col;
 
-        int writeOffset = cell->start + cell->writeIndex;
-
+        int writeOffset = myOffsets[cellIndex]++;
         grid->indices[writeOffset] = i;
+    }
+}
 
-        cell->writeIndex++;
+void UniformGrid_ClearLocalCounts(GridCountJobData* job, int numThreads)
+{
+    for (int t = 0; t < numThreads; t++)
+    {
+        int* counts = &job->localCounts[t * job->cellCount];
+        int* touched = &job->touchedCells[t * job->maxTouchedPerThread];
+        int touchedCount = job->touchedCounts[t];
+
+        for (int i = 0; i < touchedCount; i++)
+        {
+            counts[touched[i]] = 0;
+        }
+
+        job->touchedCounts[t] = 0;
     }
 }
 

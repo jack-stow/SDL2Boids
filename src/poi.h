@@ -5,7 +5,7 @@
 #include "camera.h"
 
 #define NUM_POI 10
-#define POI_HEALTH 500
+#define POI_HEALTH 50
 #define POI_ATTRACTION_RADIUS 500.0
 #define POI_CONSUME_RADIUS 30.0
 
@@ -29,5 +29,4 @@ void poi_draw(Camera* camera, PointOfInterest* poi, DrawColor color);
 vec2 poi_get_direction_vector(PointOfInterest* poi, Boid* boid);
 vec2 poi_get_force(PointOfInterest* poi, Boid* boid, SimulationParameters* sim);
 vec2 poi_get_force_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, SOASimulationParameters* sim);
-bool consume_poi(PointOfInterest* poi, Boid* boid, int damage);
-bool consume_poi_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, int damage);
+void consume_poi(PointOfInterest* poi, int damage);

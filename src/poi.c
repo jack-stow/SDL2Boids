@@ -85,44 +85,15 @@ vec2 poi_get_force_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, SOASi
 	return (vec2) { 0, 0 };
 }
 
-bool consume_poi(PointOfInterest* poi, Boid* boid, int damage)
+void consume_poi(PointOfInterest* poi, int damage)
 {
 	if (!poi->active)
 	{
-		return false;
+		return;
 	}
-	vec2 boidPos = { boid->x, boid->y };
-	vec2 poiPos = { poi->x, poi->y };
-	real distSq = vec_mag_sq(vec_sub(poiPos, boidPos));
-	if (distSq <= poi->radiusSq)
+	poi->health -= damage;
+	if (poi->health <= 0)
 	{
-		poi->health -= damage;
-		if (poi->health <= 0)
-		{
-			poi->active = false;
-		}	
-		return true;
+		poi->active = false;
 	}
-	return false;
-}
-
-bool consume_poi_soa(PointOfInterest* poi, BoidSOA* boid, int boidIndex, int damage)
-{
-	if (!poi->active)
-	{
-		return false;
-	}
-	vec2 boidPos = { boid->x[boidIndex], boid->y[boidIndex] };
-	vec2 poiPos = { poi->x, poi->y };
-	real distSq = vec_mag_sq(vec_sub(poiPos, boidPos));
-	if (distSq <= poi->radiusSq)
-	{
-		poi->health -= damage;
-		if (poi->health <= 0)
-		{
-			poi->active = false;
-		}
-		return true;
-	}
-	return false;
 }

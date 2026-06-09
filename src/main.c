@@ -27,9 +27,6 @@ void HandleObstacleInput(Obstacles** obstacles);
 void RunFlockWorkers(WorkerPool* workerpool, UniformGrid* grid, int boidCount, Boid** boids, Boid** boidsNext, Obstacles* obstacles, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime);
 
 
-
-
-
 int main(int argc, char* argv[])
 {
 	memset(&app, 0, sizeof(App));
@@ -95,7 +92,6 @@ int main(int argc, char* argv[])
 		boids[i] = boid_create(&sim);
 	}
 
-	//BoidSOA* boids = boidsoa_create(&sim);
 
 	UniformGrid grid;
 
@@ -134,7 +130,7 @@ int main(int argc, char* argv[])
 	DrawColor poiColor = { 0, 255, 0, 255 };
 
 	int numThreads = SDL_GetCPUCount();
-	int countThreads = 8;
+	int countThreads = numThreads;
 	SDL_Thread** threads = malloc(sizeof(SDL_Thread*) * numThreads);
 	char (*threadNames)[32] = malloc(sizeof(*threadNames) * numThreads);
 
@@ -180,6 +176,9 @@ int main(int argc, char* argv[])
 	};
 
 	gridCountJobData.localCounts =
+		calloc(countThreads * grid.cellCount, sizeof(int));
+
+	gridCountJobData.writeOffsets =
 		malloc(sizeof(int) * countThreads * grid.cellCount);
 
 	gridCountJobData.touchedCells =
@@ -188,10 +187,12 @@ int main(int argc, char* argv[])
 	gridCountJobData.touchedCounts =
 		malloc(sizeof(int) * countThreads);
 
+
+
 	gridCountJobData.cellCount = grid.cellCount;
 	gridCountJobData.maxTouchedPerThread = boidCount;
 
-	if (gridCountJobData.localCounts == NULL || gridCountJobData.touchedCells == NULL || gridCountJobData.touchedCounts == NULL) {
+	if (gridCountJobData.localCounts == NULL || gridCountJobData.writeOffsets == NULL || gridCountJobData.touchedCells == NULL || gridCountJobData.touchedCounts == NULL) {
 		SDL_Log("Failed to allocate local counts for grid job data");
 		exit(1);
 	}
@@ -237,24 +238,27 @@ int main(int argc, char* argv[])
 			);
 		}
 
-		bool gridBuiltThisFrame = false;
-
 		if (frameCount % 16 == 0)
 		{
-			gridBuiltThisFrame = true;
+			// prepare grid
+			Profiler_Begin(&profiler, STAT_GRID_PREPARE);
+			if (!UniformGrid_PrepareBuild(&grid, boidCount))
+			{
+				return 0;
+			}
+			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_PREPARE);
+
 
 			//gridMemsetStart = SDL_GetPerformanceCounter();
 			Profiler_Begin(&profiler, STAT_GRID_WORK);
 
-			//Profiler_Begin(&profiler, STAT_GRID_MEMSET);
 			// No more clearing numThreads * cellCount.
 			// Only reset one int per thread.
-			memset(
-				gridCountJobData.touchedCounts,
-				0,
-				sizeof(int) * countThreads
-			);
+			//Profiler_Begin(&profiler, STAT_GRID_MEMSET);
+			memset(gridCountJobData.touchedCounts,0,sizeof(int) * countThreads);
 			//Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_MEMSET);
+
+			gridCountJobData.boids = boids;
 			
 			Profiler_Begin(&profiler, STAT_GRID_COUNT);
 			WorkerPool_Run(
@@ -279,13 +283,6 @@ int main(int argc, char* argv[])
 			UniformGrid_PrefixSum(&grid);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_PREFIX);
 			
-			// prepare grid
-			Profiler_Begin(&profiler, STAT_GRID_PREPARE);
-			if (!UniformGrid_PrepareBuild(&grid, boidCount))
-			{
-				return 0;
-			}
-			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_PREPARE);
 			
 			// build grid
 			Profiler_Begin(&profiler, STAT_GRID_BUILD);
@@ -293,11 +290,14 @@ int main(int argc, char* argv[])
 				&workerpool,
 				boidCount,
 				4096,
-				workerpool.numThreads,
+				countThreads,
 				UniformGrid_RunBuildJob,
 				&gridCountJobData
 			);
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_BUILD);
+
+			UniformGrid_ClearLocalCounts(&gridCountJobData, countThreads);
+
 			Profiler_End(&profiler, &stats, &titleStats, STAT_GRID_WORK);
 		}
 
@@ -318,6 +318,34 @@ int main(int argc, char* argv[])
 		);
 		Profiler_End(&profiler, &stats, &titleStats, STAT_FLOCK);
 		
+
+		for (size_t i = 0; i < poiCount; i++)
+		{
+			PointOfInterest* poi = &pointsOfInterest[i];
+
+			GridQuery query = UniformGrid_GetQueryRange(
+				&grid,
+				poi->x,
+				poi->y,
+				poi->radius
+			);
+
+			for (int row = query.minRow; row <= query.maxRow; row++)
+			{
+				for (int col = query.minCol; col <= query.maxCol; col++)
+				{
+					const GridCell* cell = UniformGrid_GetCellConst(&grid, col, row);
+
+					if (cell == NULL)
+						continue;
+
+					consume_poi(poi, cell->count);
+
+				}
+			}
+
+		}
+
 
 		Profiler_End(&profiler, &stats, &titleStats, STAT_UPDATE);
 

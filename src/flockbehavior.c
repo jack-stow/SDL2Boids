@@ -175,7 +175,6 @@ done_neighbors:
     if (closestPOI != NULL)
     {
         poiForce = poi_get_force(closestPOI, boid, sim);
-        consume_poi(closestPOI, boid, 1);
     }
 
     flockForce = vec_add(flockForce, vec_mul(poiForce, sim->poiFactor));
@@ -308,7 +307,7 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters* sim, Poi
     if (closestPOI != NULL)
     {
         poiForce = poi_get_force(closestPOI, boid, sim);
-        consume_poi(closestPOI, boid, 1);
+        //consume_poi(closestPOI, boid, 1);
     }
 
     flockForce = vec_add(flockForce, vec_mul(poiForce, sim->poiFactor));

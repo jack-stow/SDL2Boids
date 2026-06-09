@@ -28,12 +28,6 @@
     <ClCompile Include="src\poi.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\boidSOA.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\flockbehaviorSOA.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\vectormath.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -86,12 +80,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\constants.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\boidSOA.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\flockbehaviorSOA.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\vectormath.h">

@@ -134,6 +134,7 @@ bool UniformGrid_PrepareBuild(UniformGrid* grid, int boidCount);
 */
 int UniformGrid_Build(UniformGrid* grid, const Boid* boids, int boidCount);
 
+void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex);
 
 
 /*
@@ -253,6 +254,9 @@ typedef struct
 
     int cellCount;
     int maxTouchedPerThread;
+
+    int* writeOffsets; // countThreads * cellCount
+
 } GridCountJobData;
 
 typedef struct
@@ -264,11 +268,16 @@ typedef struct
     int maxTouchedPerThread;
 } GridThreadCounts;
 
+
 void UniformGrid_RunGridCountJob(void* data, int start, int end, int threadIndex);
 
 void UniformGrid_GridCountReduce(UniformGrid* grid, GridCountJobData* job, int numThreads);
 
+void UniformGrid_ComputeWriteOffsets(UniformGrid* grid, GridCountJobData* job, int numThreads);
+
 void UniformGrid_PrefixSum(UniformGrid* grid);
-void UniformGrid_RunBuildJob(void* data, int start, int end, int threadIndex);
 void UniformGrid_Count(UniformGrid* grid, const Boid* boids, int boidCount);
+
+void UniformGrid_ClearLocalCounts(GridCountJobData* job, int numThreads);
 #endif
+
