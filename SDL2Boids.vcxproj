@@ -70,7 +70,7 @@
     <ProjectGuid>{bb3eabc1-6027-4c03-a352-719060328409}</ProjectGuid>
     <RootNamespace>SDLBoids</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>SDL2Experiments</ProjectName>
+    <ProjectName>SDL2Boids</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
