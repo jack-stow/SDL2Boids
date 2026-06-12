@@ -38,7 +38,7 @@ typedef struct
 
 	vec2 speed;
 
-	real angle;
+	//real angle;
 
 	
 } Boid;

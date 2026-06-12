@@ -194,12 +194,12 @@ done_neighbors:
         R(sim->topSpeed)
     );
 
-    if (vec_mag(boid->speed) > R(0.01))
+    /*if (vec_mag(boid->speed) > R(0.01))
     {
         boid->angle =
             REAL_ATAN2(boid->speed.y, boid->speed.x) *
             R(180.0) / REAL_PI;
-    }
+    }*/
 }
 
 void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime) {
@@ -325,10 +325,10 @@ void Flock(Boid* boid, Boid* boids, int numBoids, SimulationParameters* sim, Poi
         R(sim->topSpeed)
     );
 
-    if (vec_mag(boid->speed) > 0.01)
+    /*if (vec_mag(boid->speed) > 0.01)
     {
         boid->angle = REAL_ATAN2(boid->speed.y, boid->speed.x) * R(180.0) / REAL_PI;
-    }
+    }*/
 }
 
 

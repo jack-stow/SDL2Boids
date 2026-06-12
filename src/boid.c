@@ -21,7 +21,7 @@ Boid boid_create(SimulationParameters* sim)
 
     boid.speed = vec_mul(dir, speed);
 
-    boid.angle = REAL_ATAN2(boid.speed.y, boid.speed.x) * RAD_TO_DEG;
+    //boid.angle = REAL_ATAN2(boid.speed.y, boid.speed.x) * RAD_TO_DEG;
 
     return boid;
 }

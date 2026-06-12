@@ -26,6 +26,15 @@ void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, Simulatio
 void HandleObstacleInput(Obstacles** obstacles);
 void RunFlockWorkers(WorkerPool* workerpool, UniformGrid* grid, int boidCount, Boid** boids, Boid** boidsNext, Obstacles* obstacles, SimulationParameters* sim, PointOfInterest* pointsOfInterest, int poiCount, real deltaTime);
 
+void DrawBoidsBatchedPointsInterpolated(
+	Camera* camera,
+	const Boid* previous,
+	const Boid* current,
+	int numBoids,
+	SimulationParameters* sim,
+	real alpha,
+	bool rebuildPoints);
+
 
 int main(int argc, char* argv[])
 {
@@ -81,7 +90,9 @@ int main(int argc, char* argv[])
 
 	Boid* boidsNext = malloc(sizeof(Boid) * boidCount);
 
-	if (boids == NULL || boidsNext == NULL)
+	Boid* boidsInterpolate = malloc(sizeof(Boid) * boidCount);
+
+	if (boids == NULL || boidsNext == NULL || boidsInterpolate == NULL)
 	{
 		SDL_Log("Failed to allocate boids");
 		exit(1);
@@ -204,6 +215,9 @@ int main(int argc, char* argv[])
 
 	FrameProfiler profiler = { 0 };
 
+	static real simAccum = 0.0f;
+
+	double fixedDt = 1.0 / 15.0;
 	while (1)
 	{
 		Uint64 frameStart = SDL_GetPerformanceCounter();
@@ -238,7 +252,7 @@ int main(int argc, char* argv[])
 			);
 		}
 
-		if (frameCount % 59 == 0)
+		if (frameCount % 16 == 0)
 		{
 			// prepare grid
 			Profiler_Begin(&profiler, STAT_GRID_PREPARE);
@@ -312,21 +326,28 @@ int main(int argc, char* argv[])
 		}
 
 
+		simAccum += deltaTimeReal;
+		if (frameCount % 4 == 0) {
 
-		Profiler_Begin(&profiler, STAT_FLOCK);
-		RunFlockWorkers(
-			&workerpool,
-			&grid,
-			boidCount,
-			&boids,
-			&boidsNext,
-			obstacles,
-			&sim,
-			pointsOfInterest,
-			poiCount,
-			deltaTime
-		);
-		Profiler_End(&profiler, &stats, &titleStats, STAT_FLOCK);
+			memcpy(boidsInterpolate, boids, sizeof(Boid) * boidCount);
+
+			Profiler_Begin(&profiler, STAT_FLOCK);
+			RunFlockWorkers(
+				&workerpool,
+				&grid,
+				boidCount,
+				&boids,
+				&boidsNext,
+				obstacles,
+				&sim,
+				pointsOfInterest,
+				poiCount,
+				simAccum
+			);
+			Profiler_End(&profiler, &stats, &titleStats, STAT_FLOCK);
+			simAccum = 0.0f;
+		}
+		
 		
 
 		for (size_t i = 0; i < poiCount; i++)
@@ -367,9 +388,20 @@ int main(int argc, char* argv[])
 		camera.y += cameraInputDir.y * CAMERA_SPEED * R(deltaTime);
 
 		//DrawBoids(boids, boidCount, &sim);
-		bool rebuildDrawPoints = frameCount % 2 == 0;
-		DrawBoidsBatchedPoints(&camera, boids, boidCount, &sim, rebuildDrawPoints);
-		
+		bool rebuildDrawPoints = true; //frameCount % 2 == 0;
+		//DrawBoidsBatchedPoints(&camera, boids, boidCount, &sim, rebuildDrawPoints);
+
+		real alpha = simAccum / fixedDt;
+
+		DrawBoidsBatchedPointsInterpolated(
+			&camera,
+			boidsInterpolate,
+			boids,
+			boidCount,
+			&sim,
+			alpha,
+			rebuildDrawPoints
+		);
 		for (size_t i = 0; i < poiCount; i++)
 		{
 			if (!pointsOfInterest[i].active)
@@ -516,6 +548,72 @@ void DrawBoidsBatchedPoints(Camera* camera, Boid* boids, int numBoids, Simulatio
 	);
 
 	SDL_RenderDrawPoints(app.renderer, points, pointCount);
+}
+
+
+void DrawBoidsBatchedPointsInterpolated(
+	Camera* camera,
+	const Boid* previous,
+	const Boid* current,
+	int numBoids,
+	SimulationParameters* sim,
+	real alpha,
+	bool rebuildPoints)
+{
+	static SDL_Point* points = NULL;
+	static int capacity = 0;
+	static int pointCount = 0;
+
+	if (numBoids > capacity)
+	{
+		SDL_Point* newPoints =
+			realloc(points, sizeof(SDL_Point) * numBoids);
+
+		if (newPoints == NULL)
+		{
+			SDL_Log("Failed to allocate point batch");
+			return;
+		}
+
+		points = newPoints;
+		capacity = numBoids;
+	}
+
+	if (rebuildPoints)
+	{
+		for (int i = 0; i < numBoids; i++)
+		{
+			real x =
+				previous[i].x +
+				(current[i].x - previous[i].x) * alpha;
+
+			real y =
+				previous[i].y +
+				(current[i].y - previous[i].y) * alpha;
+
+			vec2 screen =
+				WorldToScreen(camera, (vec2) { x, y });
+
+			points[i].x = (int)screen.x;
+			points[i].y = (int)screen.y;
+		}
+
+		pointCount = numBoids;
+	}
+
+	SDL_SetRenderDrawColor(
+		app.renderer,
+		sim->boidColor.r,
+		sim->boidColor.g,
+		sim->boidColor.b,
+		sim->boidColor.a
+	);
+
+	SDL_RenderDrawPoints(
+		app.renderer,
+		points,
+		pointCount
+	);
 }
 
 vec2 GetCameraInputDirection()

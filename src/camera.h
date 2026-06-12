@@ -3,7 +3,7 @@
 #include "vector2.h"
 
 
-#define CAMERA_SPEED 2000.0
+#define CAMERA_SPEED 200.0
 
 typedef struct Camera {
     real x, y;        // world-space top-left, or center
