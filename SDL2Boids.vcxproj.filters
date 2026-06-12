@@ -37,12 +37,18 @@
     <ClCompile Include="src\arena.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\obstacles.c" />
-    <ClCompile Include="src\camera.c" />
-    <ClCompile Include="src\workerpool.c" />
-    <ClCompile Include="src\stats.c" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="src\obstacles.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\camera.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\workerpool.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stats.c">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClInclude Include="src\common.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -91,10 +97,18 @@
     <ClInclude Include="src\arena.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\obstacles.h" />
-    <ClInclude Include="src\camera.h" />
-    <ClInclude Include="src\workerpool.h" />
-    <ClInclude Include="src\stats.h" />
+    <ClInclude Include="src\obstacles.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\camera.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\workerpool.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stats.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
