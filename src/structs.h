@@ -1,6 +1,5 @@
 
-#ifndef STRUCTS_H
-#define STRUCTS_H
+#pragma once
 #include <stdbool.h>
 typedef struct {
     SDL_Renderer* renderer;
@@ -24,4 +23,3 @@ typedef struct {
 
     double mouseWheelY;
 } App;
-#endif

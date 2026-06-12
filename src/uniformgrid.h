@@ -1,7 +1,5 @@
 // uniform_grid.h
-#ifndef UNIFORM_GRID_H
-#define UNIFORM_GRID_H
-
+#pragma once
 #include <stddef.h>
 #include "arena.h"
 #include "boid.h"
@@ -282,5 +280,3 @@ void UniformGrid_PrefixSum(UniformGrid* grid);
 void UniformGrid_Count(UniformGrid* grid, const Boid* boids, int boidCount);
 
 void UniformGrid_ClearLocalCounts(GridCountJobData* job, int numThreads);
-#endif
-
